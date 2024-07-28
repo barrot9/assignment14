@@ -1,5 +1,5 @@
 commands.txt
-test_Macro.asm
+test_Macro.txt
 output.asm
 main.o
 macro_Handling.o
