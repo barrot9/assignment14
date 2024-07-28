@@ -1,1 +1,7 @@
 commands.txt
+test_Macro.asm
+output.asm
+main.o
+macro_Handling.o
+*.o
+*.exe
