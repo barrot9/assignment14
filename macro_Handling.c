@@ -14,21 +14,6 @@ void freeLines(Line *lines);
 char *trimWhitespace(char *str);
 
 /*
- * Main function: Entry point of the program. It checks the command-line arguments,
- * opens the input file, calls processFile to handle the file processing, and closes the file.
- */
-int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
-        return 1;
-    }
-
-    processFile(argv[1]);
-
-    return 0;
-}
-
-/*
  * processFile: Reads the input file line by line, detects macro definitions,
  * stores them, and calls expandMacros to process and expand macros in the file content,
  * writing the result to a new file.
@@ -38,7 +23,6 @@ void processFile(const char *filename) {
     Macro *macros = NULL;
     FILE *file = fopen(filename, "r");
     FILE *outputFile = fopen("output.asm", "w");
-    Macro *temp;
 
     if (!file) {
         perror("Could not open file");
