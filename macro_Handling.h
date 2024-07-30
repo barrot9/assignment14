@@ -26,5 +26,6 @@ int readLine(FILE *file, char *buffer, int maxLength);
 void addMacro(const char *macroName, Line *lines, Macro **macros);
 void addLine(Line **lines, const char *content);
 void freeLines(Line *lines);
+char *trimWhitespace(char *str);
 
 #endif /* MACRO_HANDLING_H */
