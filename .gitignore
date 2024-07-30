@@ -1,7 +1,9 @@
 commands.txt
 test_Macro.txt
 test_Macro.asm
-output.asm
+good_Macro.as
+invalid_Macro1.as
+invalid_Macro2.as
 main.o
 macro_Handling.o
 *.o
