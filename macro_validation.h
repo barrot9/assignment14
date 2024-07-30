@@ -6,6 +6,6 @@
 /* Function Prototypes */
 int isValidMacroName(const char *name);
 int hasAdditionalCharacters(const char *line);
-void validateMacros(const char *filename);
+int validateMacros(const char *filename);
 
 #endif /* MACRO_VALIDATION_H */

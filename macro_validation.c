@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h> /* Include ctype.h for isspace function */
+#include <stdlib.h> /* Include stdlib.h for exit */
 
 /* List of invalid macro names */
 const char *invalidNames[] = {
@@ -32,19 +33,30 @@ int isValidMacroName(const char *name) {
  */
 int hasAdditionalCharacters(const char *line) {
     const char *trimmedLine = trimWhitespace((char *)line);
-    return !(strcmp(trimmedLine, "endmacr") == 0 || strncmp(trimmedLine, "macr ", 5) == 0);
+    if (strncmp(trimmedLine, "macr ", 5) == 0) {
+        char macroName[MAX_LINE_LENGTH];
+        sscanf(trimmedLine, "macr %s", macroName);
+        if (strchr(macroName, ' ') != NULL) {
+            return 1; /* Invalid if there are spaces in the macro name */
+        }
+        return 0;
+    }
+    if (strcmp(trimmedLine, "endmacr") == 0) {
+        return 0;
+    }
+    return 1;
 }
 
 /*
  * validateMacros: Validates macro names and ensures no additional characters.
  */
-void validateMacros(const char *filename) {
+int validateMacros(const char *filename) {
     char line[MAX_LINE_LENGTH + 2]; /* +2 to handle \n and \0 */
     FILE *file = fopen(filename, "r");
 
     if (!file) {
         perror("Could not open file");
-        return;
+        return 1; /* Error code */
     }
 
     while (readLine(file, line, MAX_LINE_LENGTH + 2)) {
@@ -52,33 +64,39 @@ void validateMacros(const char *filename) {
         if (strncmp(trimmedLine, "macr", 4) == 0) {
             char macroName[MAX_LINE_LENGTH];
             sscanf(trimmedLine, "macr %s", macroName);
-            printf("macro name: '%s'\n", macroName);
+
             if (!isValidMacroName(macroName)) {
                 fprintf(stderr, "Error: Invalid macro name '%s'\n", macroName);
                 fclose(file);
-                return;
+                return 1; /* Error code */
             }
 
             if (hasAdditionalCharacters(trimmedLine)) {
                 fprintf(stderr, "Error: Macro definition line has additional characters: '%s'\n", trimmedLine);
                 fclose(file);
-                return;
+                return 1; /* Error code */
             }
 
             while (readLine(file, line, MAX_LINE_LENGTH + 2)) {
                 trimmedLine = trimWhitespace(line);
-                if (strcmp(trimmedLine, "endmacr") == 0) {
-                    break;
+                if (strncmp(trimmedLine, "endmacr", 7) == 0) {
+                    if (hasAdditionalCharacters(trimmedLine)) {
+                        fprintf(stderr, "Error: Macro end line has additional characters: '%s'\n", trimmedLine);
+                        fclose(file);
+                        return 1; /* Error code */
+                    }
+                    break; /* Correctly break out of the loop */
                 }
             }
 
             if (strcmp(trimmedLine, "endmacr") != 0) {
                 fprintf(stderr, "Error: Macro end line has additional characters: '%s'\n", trimmedLine);
                 fclose(file);
-                return;
+                return 1; /* Error code */
             }
         }
     }
 
     fclose(file);
+    return 0; /* Success code */
 }
