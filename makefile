@@ -1,9 +1,9 @@
 all: final_project
 
-final_project: main.o macro_Handling.o macro_validation.o line_recognizer.o directive_processor.o sentence_processor.o
-	gcc -g -ansi -pedantic -Wall main.o macro_Handling.o macro_validation.o line_recognizer.o directive_processor.o sentence_processor.o -o final_project
+final_project: main.o macro_Handling.o macro_validation.o line_recognizer.o directive_processor.o sentence_processor.o file_generator.o
+	gcc -g -ansi -pedantic -Wall main.o macro_Handling.o macro_validation.o line_recognizer.o directive_processor.o sentence_processor.o file_generator.o -o final_project
 
-main.o: main.c main.h macro_Handling.h macro_validation.h line_recognizer.h directive_processor.h sentence_processor.h
+main.o: main.c main.h macro_Handling.h macro_validation.h line_recognizer.h directive_processor.h sentence_processor.h file_generator.h
 	gcc -g -ansi -pedantic -Wall -c main.c
 
 macro_Handling.o: macro_Handling.c macro_Handling.h
@@ -21,5 +21,8 @@ directive_processor.o: directive_processor.c directive_processor.h
 sentence_processor.o: sentence_processor.c sentence_processor.h
 	gcc -g -ansi -pedantic -Wall -c sentence_processor.c
 
+file_generator.o: file_generator.c file_generator.h
+	gcc -g -ansi -pedantic -Wall -c file_generator.c
+
 clean:
-	rm -f final_project main.o macro_Handling.o macro_validation.o line_recognizer.o directive_processor.o sentence_processor.o
+	rm -f final_project main.o macro_Handling.o macro_validation.o line_recognizer.o directive_processor.o sentence_processor.o file_generator.o
