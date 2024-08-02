@@ -1,4 +1,6 @@
 #include "main.h"
+#include "line_recognizer.h"
+#include "directive_processor.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h> /* Include stdlib.h for exit */
