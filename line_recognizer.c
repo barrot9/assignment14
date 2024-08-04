@@ -51,7 +51,8 @@ void translateLine(const char *line) {
 
 /* Convert a decimal number to a 4-bit binary string */
 void decimalToBinary(int decimal, char *binary) {
-    for (int i = 3; i >= 0; i--) {
+    int i;
+    for (i = 3; i >= 0; i--) {
         binary[i] = (decimal % 2) + '0';
         decimal /= 2;
     }
@@ -61,8 +62,8 @@ void decimalToBinary(int decimal, char *binary) {
 /* Convert command name to a 4-bit binary string */
 void commandToBinary(const char *command, char *binary) {
     int numCommands = sizeof(commands) / sizeof(commands[0]);
-
-    for (int i = 0; i < numCommands; i++) {
+    int i;
+    for (i = 0; i < numCommands; i++) {
         if (strcmp(command, commands[i]) == 0) {
             decimalToBinary(i, binary);
             return;
@@ -100,8 +101,8 @@ void processDirective(const char *line) {
 
 int isInstructionLine(const char *line) {
     int numCommands = sizeof(commands) / sizeof(commands[0]);
-
-    for (int i = 0; i < numCommands; i++) {
+    int i;
+    for (i = 0; i < numCommands; i++) {
         if (strncmp(line, commands[i], strlen(commands[i])) == 0) {
             return 1;
         }

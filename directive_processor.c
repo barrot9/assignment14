@@ -76,7 +76,9 @@ void processDataDirective(const char *parameters) {
 void processStringDirective(const char *parameters) {
     const char *start;
     char *string;
-
+    const char *end;
+    size_t length;
+    size_t i;
     /* Check for starting double quote */
     if (*parameters != '"') {
         printf("Invalid string directive.\n");
@@ -87,14 +89,14 @@ void processStringDirective(const char *parameters) {
     start = parameters + 1;
 
     /* Find the closing double quote */
-    const char *end = strchr(start, '"');
+    end = strchr(start, '"');
     if (!end) {
         printf("Unterminated string directive.\n");
         return;
     }
 
     /* Allocate space for string and null terminator */
-    size_t length = end - start;
+    length = end - start;
     string = (char *)malloc(length + 1);
     if (!string) {
         printf("Memory allocation failed.\n");
@@ -106,7 +108,7 @@ void processStringDirective(const char *parameters) {
     string[length] = '\0';
 
     /* Print or store ASCII values and null terminator */
-    for (size_t i = 0; i <= length; i++) {
+    for (i = 0; i <= length; i++) {
         printf("String char: %d\n", string[i]);
     }
 
