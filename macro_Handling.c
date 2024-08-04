@@ -19,10 +19,14 @@ void freeLines(Line *lines);
  * writing the result to a new file.
  */
 void processFile(const char *filename) {
-    char line[MAX_LINE_LENGTH + 2]; /* +2 to handle \n and \0 */
+    char line[MAX_LINE_LENGTH + 2], outputFileName[MAX_LINE_LENGTH]; /* +2 to handle \n and \0 */
     Macro *macros = NULL;
     FILE *file = fopen(filename, "r");
-    FILE *outputFile = fopen("output.asm", "w");
+    FILE *outputFile;
+    strncpy(outputFileName, filename, strlen(filename) - 3);
+    outputFileName[strlen(filename) - 3] = '\0'; /* Remove the .as extension*/
+    strcat(outputFileName, ".am"); /*Add the .am extension*/
+    outputFile = fopen(outputFileName, "w");
 
     if (!file) {
         perror("Could not open file");
