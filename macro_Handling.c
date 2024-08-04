@@ -1,4 +1,5 @@
 #include "macro_Handling.h"
+#include "utils.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -11,7 +12,6 @@ int readLine(FILE *file, char *buffer, int maxLength);
 void addMacro(const char *macroName, Line *lines, Macro **macros);
 void addLine(Line **lines, const char *content);
 void freeLines(Line *lines);
-char *trimWhitespace(char *str);
 
 /*
  * processFile: Reads the input file line by line, detects macro definitions,
@@ -184,24 +184,3 @@ int readLine(FILE *file, char *buffer, int maxLength) {
     return 1;
 }
 
-/*
- * trimWhitespace: Removes leading and trailing whitespace from a string.
- */
-char *trimWhitespace(char *str) {
-    char *end;
-
-    /* Trim leading space */
-    while (isspace((unsigned char)*str)) str++;
-
-    if (*str == 0)  /* All spaces? */
-        return str;
-
-    /* Trim trailing space */
-    end = str + strlen(str) - 1;
-    while (end > str && isspace((unsigned char)*end)) end--;
-
-    /* Write new null terminator */
-    end[1] = '\0';
-
-    return str;
-}

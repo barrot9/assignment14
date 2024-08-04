@@ -1,4 +1,5 @@
 #include "macro_validation.h"
+#include "utils.h"
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h> /* Include ctype.h for isspace function */
