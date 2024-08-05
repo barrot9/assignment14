@@ -7,5 +7,6 @@ invalid_Macro1.as
 invalid_Macro2.as
 main.o
 macro_Handling.o
+.vscode/settings.json
 *.o
 *.exe

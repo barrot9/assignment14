@@ -1,23 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "file_generator.h"
+#include "stages/finalStage/file_generator.h"
 
-/* Function to convert binary to octal */
-int convertBinaryToOctal(int binary) {
+/* Function to convert a short (15-bit binary number) to octal */
+int convertShortToOctal(short binaryValue) {
     int octal = 0;
     int decimal = 0;
     int base = 1;
-
-    /* Convert binary to decimal */
-    while (binary > 0) {
-        decimal += (binary % 10) * base;
-        binary /= 10;
+    int i;
+    /* Convert the short binary value to a decimal */
+    for (i = 0; i < 15; ++i) {
+        decimal += (binaryValue & (1 << i)) ? base : 0;
         base *= 2;
     }
 
-    /* Convert decimal to octal */
+    /* Reset base for octal conversion */
     base = 1;
+
+    /* Convert decimal to octal */
     while (decimal > 0) {
         octal += (decimal % 8) * base;
         decimal /= 8;
@@ -64,8 +65,8 @@ void createObFile(const char *originFilename, const InputData *inputData) {
     /* Iterate over the linked list and write memory image */
     currentNode = inputData->head;
     while (currentNode != NULL) {
-        /* Convert binary line to octal */
-        octalContent = convertBinaryToOctal(currentNode->binaryLine);
+        /* Convert 15-bit short binary value to octal */
+        octalContent = convertShortToOctal(currentNode->binaryValue);
 
         /* Write address and octal content to the .ob file */
         fprintf(file, "%04d %05o\n", currentNode->addressIndex, octalContent);
@@ -80,11 +81,15 @@ void createObFile(const char *originFilename, const InputData *inputData) {
 }
 
 /* Function to create the .ent file */
-void createEntFile(const char *originFilename, const Symbol *symbolTable, int symbolCount) {
+void createEntFile(const char *originFilename, const Symbol *symbolTable) {
     FILE *file;
+    char *entFilename; 
     int i;
+    bool hasEntrySymbols = false;
+    const Symbol *currentSymbol;
 
-    char *entFilename = constructOutputFilename(originFilename, ".ent");
+    entFilename = constructOutputFilename(originFilename, ".ent");
+    
 
     file = fopen(entFilename, "w");
     if (!file) {
@@ -94,22 +99,32 @@ void createEntFile(const char *originFilename, const Symbol *symbolTable, int sy
     }
 
     /* Write entry symbols to the file */
-    for (i = 0; i < symbolCount; ++i) {
-        if (symbolTable[i].isEntry) {
-            fprintf(file, "%s %04d\n", symbolTable[i].name, symbolTable[i].address);
+    currentSymbol = symbolTable;
+    while (currentSymbol != NULL) {
+        if (currentSymbol->isEntry) {
+            for (i = 0; i < currentSymbol->usageCount; ++i) {
+                fprintf(file, "%s %04d\n", currentSymbol->name, currentSymbol->usageAddresses[i]);
+            }
+            hasEntrySymbols = true;
         }
+        currentSymbol = currentSymbol->next;
     }
 
     fclose(file);
+    if (!hasEntrySymbols) {
+        remove(entFilename); /* Remove file if no entry symbols */
+    }
     free(entFilename);
     printf("File '%s' has been created successfully.\n", entFilename);
 }
 
-/* Function to create the .ext file */
-void createExtFile(const char *originFilename, const ExternalRef *externalRefs) {
-    FILE *file;
-    const ExternalRef *currentRef = externalRefs; /* Move declaration to the beginning */
 
+/* Function to create the .ext file */
+void createExtFile(const char *originFilename, const Symbol *symbolTable) {
+    FILE *file;
+    int i;
+    bool hasExternalSymbols = false;
+    const Symbol *currentSymbol;
     char *extFilename = constructOutputFilename(originFilename, ".ext");
 
     file = fopen(extFilename, "w");
@@ -120,47 +135,22 @@ void createExtFile(const char *originFilename, const ExternalRef *externalRefs) 
     }
 
     /* Write external references to the file */
-    while (currentRef != NULL) {
-        fprintf(file, "%s %04d\n", currentRef->name, currentRef->address);
-        currentRef = currentRef->next;
+    currentSymbol = symbolTable;
+    while (currentSymbol != NULL) {
+        if (currentSymbol->isExternal) {
+            for (i = 0; i < currentSymbol->usageCount; ++i) {
+                fprintf(file, "%s %04d\n", currentSymbol->name, currentSymbol->usageAddresses[i]);
+            }
+            hasExternalSymbols = true;
+        }
+        currentSymbol = currentSymbol->next;
     }
 
     fclose(file);
+    if (!hasExternalSymbols) {
+        remove(extFilename); /* Remove file if no external symbols */
+    }
     free(extFilename);
     printf("File '%s' has been created successfully.\n", extFilename);
 }
 
-
-
-/*
-int main() {
-    const char *originFilename = "program";
-
-     Example linked list of binary lines 
-    Node node3 = {000010001001010, 0102, NULL};
-    Node node2 = {000000011000100, 0101, &node3};
-    Node node1 = {001010000010100, 0100, &node2};
-    */
-    /* InputData inputData = {&node1, 10, 20};  Replace with actual instruction and data lengths 
-    */
-    /* Example symbol table - replace with actual symbols 
-    Symbol symbolTable[] = {
-        {"MAIN", 100, 1},
-        {"LIST", 137, 1}
-    };
-    int symbolCount = sizeof(symbolTable) / sizeof(symbolTable[0]); */
-
-    /* Example linked list of external references 
-    ExternalRef ref3 = {"fn1", 0104, NULL};
-    ExternalRef ref2 = {"L3", 0114, &ref3};
-    ExternalRef ref1 = {"L3", 0127, &ref2}; */
-    /* Create the .ob file 
-    createObFile(originFilename, &inputData); */
-
-    /* Create the .ent file 
-    createEntFile(originFilename, symbolTable, symbolCount);
-
-     Create the .ext file 
-    createExtFile(originFilename, &ref1);
-
-    return 0; */
