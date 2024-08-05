@@ -1,0 +1,69 @@
+int main() {
+    const char *originFilename = "program";  /* Example base filename */
+
+    /* Sample binary values for memory cells */
+    short binaryValue1 = 0b000010001001010;  /* 15-bit binary value */
+    short binaryValue2 = 0b000000000101010;  /* 15-bit binary value */
+    short binaryValue3 = 0b000000000110011;  /* 15-bit binary value */
+
+    /* Create linked list of nodes representing memory */
+    Node *node3 = (Node *)malloc(sizeof(Node));
+    node3->addressIndex = 2;
+    node3->binaryValue = binaryValue3;
+    node3->next = NULL;
+
+    Node *node2 = (Node *)malloc(sizeof(Node));
+    node2->addressIndex = 1;
+    node2->binaryValue = binaryValue2;
+    node2->next = node3;
+
+    Node *node1 = (Node *)malloc(sizeof(Node));
+    node1->addressIndex = 0;
+    node1->binaryValue = binaryValue1;
+    node1->next = node2;
+
+    /* Set up the input data with instruction and data lengths */
+    InputData inputData = {node1, 3, 0};  /* Instruction length is 3, no data segment */
+
+    /* Example symbol table */
+    Symbol *symbol1 = (Symbol *)malloc(sizeof(Symbol));
+    strcpy(symbol1->name, "START");
+    symbol1->isEntry = true;
+    symbol1->isExternal = false;
+    symbol1->usageAddresses = (int *)malloc(sizeof(int) * 1);
+    symbol1->usageAddresses[0] = 0;
+    symbol1->usageCount = 1;
+    symbol1->next = NULL;
+
+    Symbol *symbol2 = (Symbol *)malloc(sizeof(Symbol));
+    strcpy(symbol2->name, "EXTERNAL1");
+    symbol2->isEntry = false;
+    symbol2->isExternal = true;
+    symbol2->usageAddresses = (int *)malloc(sizeof(int) * 2);
+    symbol2->usageAddresses[0] = 1;
+    symbol2->usageAddresses[1] = 2;
+    symbol2->usageCount = 2;
+    symbol2->next = symbol1;
+
+    inputData.symbolTable = symbol2;  /* Symbol table linked list */
+
+    /* Generate the .ob file */
+    createObFile(originFilename, &inputData);
+
+    /* Generate the .ent file */
+    createEntFile(originFilename, inputData.symbolTable);
+
+    /* Generate the .ext file */
+    createExtFile(originFilename, inputData.symbolTable);
+
+    /* Free allocated memory */
+    free(symbol1->usageAddresses);
+    free(symbol2->usageAddresses);
+    free(symbol1);
+    free(symbol2);
+    free(node1);
+    free(node2);
+    free(node3);
+
+    return 0;
+}
