@@ -12,7 +12,7 @@
 #include "supp.h"   /* Header file for supplementary functions */
 
 /* Function to process the assembly file and handle symbol table entries */
-int first(struct prog* prog, FILE * AMFILE, char *AMFILENAME) {
+int first(struct SymbolTableManager* symbolManager, FILE * AMFILE, char *AMFILENAME) {
     int err = 0; /* Error flag initialized to 0 */
     char line[81] = {0}; /* Buffer to hold a line from the file */
     extern struct parse p_line; /* External parse structure for parsed line */
@@ -35,7 +35,7 @@ int first(struct prog* prog, FILE * AMFILE, char *AMFILENAME) {
 
         /* Check if the line contains a label and is either a directive or code */
         if (p_line.label && ((p_line.parse_type == parse_dir && p_line.d_type <= d_data) || p_line.parse_type == parse_code)) {
-            symbol_f = sym_search_function(prog, p_line.label); /* Search for the symbol */
+            symbol_f = sym_search_function(symbolManager, p_line.label); /* Search for the symbol */
             if (symbol_f) { /* If the symbol is found */
                 if (symbol_f->sym_type == new_type_entry_temporary) {
                     /* Update symbol details based on whether it is code or data */
@@ -55,12 +55,12 @@ int first(struct prog* prog, FILE * AMFILE, char *AMFILENAME) {
             } else { /* If the symbol is not found */
                 /* Add a new symbol based on the parse type */
                 if (p_line.parse_type == parse_code) {
-                    add_symbol(prog, p_line.label, new_type_code, ic, line_c, 0, 0); /* Add code symbol */
+                    add_symbol(symbolManager, p_line.label, new_type_code, ic, line_c, 0, 0); /* Add code symbol */
                 } else {
                     if (p_line.d_type == d_data) {
-                        add_symbol(prog, p_line.label, new_type_data, dc, line_c, 0, p_line.data_size); /* Add data symbol */
+                        add_symbol(symbolManager, p_line.label, new_type_data, dc, line_c, 0, p_line.data_size); /* Add data symbol */
                     } else {
-                        add_symbol(prog, p_line.label, new_type_data, dc, line_c, 0, strlen(p_line.dir_str)); /* Add string symbol */
+                        add_symbol(symbolManager, p_line.label, new_type_data, dc, line_c, 0, strlen(p_line.dir_str)); /* Add string symbol */
                     }
                 }
             }
@@ -99,7 +99,7 @@ int first(struct prog* prog, FILE * AMFILE, char *AMFILENAME) {
         }
         /* Handle entry and external directives */
         else if ((p_line.parse_type == parse_dir && p_line.d_type > d_data)) {
-            symbol_f = sym_search_function(prog, p_line.dir_label); /* Search for the directive label */
+            symbol_f = sym_search_function(symbolManager, p_line.dir_label); /* Search for the directive label */
             if (symbol_f) { /* If the symbol is found */
                 if (p_line.d_type == d_entry) {
                     /* Update symbol type if it is an entry */
@@ -117,27 +117,27 @@ int first(struct prog* prog, FILE * AMFILE, char *AMFILENAME) {
                 }
             } else { /* If the symbol is not found */
                 if (p_line.d_type == d_entry) {
-                    add_symbol(prog, p_line.dir_label, new_type_entry_temporary, 0, line_c, 0, 0); /* Add temporary entry symbol */
+                    add_symbol(symbolManager, p_line.dir_label, new_type_entry_temporary, 0, line_c, 0, 0); /* Add temporary entry symbol */
                 } else {
-                    add_symbol(prog, p_line.dir_label, new_type_external, 0, line_c, 0, 0); /* Add external symbol */
+                    add_symbol(symbolManager, p_line.dir_label, new_type_external, 0, line_c, 0, 0); /* Add external symbol */
                 }
             }
         }
     }
 
     /* Adjust symbol addresses and handle entries */
-    for (i = 0; i < prog->symbols_size; i++) {
-        if (prog->symbols[i].sym_type == new_type_entry_temporary) {
+    for (i = 0; i < symbolManager->symbols_size; i++) {
+        if (symbolManager->symbols[i].sym_type == new_type_entry_temporary) {
             err = 1; /* Set error flag for temporary entries */
         } else {
             /* Adjust addresses for data symbols */
-            if (prog->symbols[i].sym_type == new_type_data || prog->symbols[i].sym_type == new_type_entry_data) {
-                prog->symbols[i].addr += ic; /* Add instruction counter to address */
+            if (symbolManager->symbols[i].sym_type == new_type_data || symbolManager->symbols[i].sym_type == new_type_entry_data) {
+                symbolManager->symbols[i].addr += ic; /* Add instruction counter to address */
             }
             /* Handle entries */
-            if (prog->symbols[i].sym_type == new_type_entry_code || prog->symbols[i].sym_type == new_type_entry_data) {
-                prog->entries[prog->entries_count] = &prog->symbols[i]; /* Add to entries list */
-                prog->entries_count++; /* Increment entries count */
+            if (symbolManager->symbols[i].sym_type == new_type_entry_code || symbolManager->symbols[i].sym_type == new_type_entry_data) {
+                symbolManager->entries[symbolManager->entries_count] = &symbolManager->symbols[i]; /* Add to entries list */
+                symbolManager->entries_count++; /* Increment entries count */
             }
         }
     }

@@ -28,39 +28,41 @@ struct symbol {
     int data_size;                /* Size of data or string */
 };
 
+#define SLOTS 4096                /* Address slots size */                
+
 /* Structure to represent an external reference */
 struct external {
     char *ext_name;               /* Name of the external symbol */
-    int addr[4096];               /* Addresses where the external is used */
+    int addr[SLOTS];               /* Addresses where the external is used */
     int addr_c;                   /* Count of addresses */
 };
 
 /* Structure to represent a program with its code, data, symbols, and externals */
-struct prog {
-    int code[4096];                /* Array to hold the code section */
+struct SymbolTableManager {
+    int code[SLOTS];                /* Array to hold the code section */
     int code_size;                 /* Size of the code section */
-    int data[4096];                /* Array to hold the data section */
+    int data[SLOTS];                /* Array to hold the data section */
     int data_size;                 /* Size of the data section */
 
-    struct symbol symbols[4096];   /* Array to hold the symbols */
+    struct symbol symbols[SLOTS];   /* Array to hold the symbols */
     int symbols_size;              /* Number of symbols */
 
-    const struct symbol *entries[4096]; /* Array of pointers to entry symbols */
+    const struct symbol *entries[SLOTS]; /* Array of pointers to entry symbols */
     int entries_count;             /* Count of entry symbols */
 
-    struct external externals[4096]; /* Array to hold external references */
+    struct external externals[SLOTS]; /* Array to hold external references */
     int externals_size;            /* Number of external references */
 };
 
 /* Function to search for a symbol in the program's symbol table */
-struct symbol *sym_search_function(struct prog *prog, char *name);
+struct symbol *sym_search_function(struct SymbolTableManager *symbolManager, char *name);
 
 /* Function to add a symbol to the program's symbol table */
-void add_symbol(struct prog *prog, char *name, 
+void add_symbol(struct SymbolTableManager *symbolManager, char *name, 
                 enum new_symbol_type symbol_type,
                 int address, int line_of_def, int c_number, int data_or_str_size);
 
 /* Function to search for an external reference in the program */
-struct external *sym_search_function_external(struct prog *prog, char *name);
+struct external *sym_search_function_external(struct SymbolTableManager *symbolManager, char *name);
 
 #endif /* STRUCT_H */
