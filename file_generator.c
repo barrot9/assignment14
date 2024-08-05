@@ -3,22 +3,6 @@
 #include <string.h>
 #include "file_generator.h"
 
-#define MAX_LINE_LENGTH 100 /* Maximum length for a line of assembly code */
-
-/* Function to translate a line of assembly code to a binary representation */
-int translateToBinary(const char *assemblyLine) {
-    int binary = 0;
-    
-    /* Translation logic goes here */
-    /* For demonstration, let's assume each character translates to its ASCII value */
-    /* In a real assembler, you would parse the instruction and operands and generate the machine code */
-    for (int i = 0; assemblyLine[i] != '\0'; i++) {
-        binary = (binary << 1) ^ assemblyLine[i]; /* Simple transformation for demonstration */
-    }
-
-    return binary;
-}
-
 /* Function to convert binary to octal */
 int convertBinaryToOctal(int binary) {
     int octal = 0;
@@ -43,88 +27,140 @@ int convertBinaryToOctal(int binary) {
     return octal;
 }
 
-/* Function to write the memory image to the .ob file */
-void writeMemoryImage(FILE *file, const char **assemblyLines, int lineCount) {
-    int address = 0; /* Starting address */
-    int binaryContent;
-    int octalContent;
+/* Helper function to construct the output filename */
+char *constructOutputFilename(const char *originFilename, const char *extension) {
+    size_t len = strlen(originFilename);
+    char *outputFilename = malloc(len + strlen(extension) + 1);
 
-    for (int i = 0; i < lineCount; ++i) {
-        /* Translate the line to binary */
-        binaryContent = translateToBinary(assemblyLines[i]);
-
-        /* Convert binary to octal */
-        octalContent = convertBinaryToOctal(binaryContent);
-
-        /* Write to the .ob file with address and octal content */
-        fprintf(file, "%04d %05o\n", address, octalContent);
-
-        /* Increment address (assume each instruction occupies one word) */
-        address++;
-    }
-}
-
-/* Function to create the .ob file */
-void createObFile(const char *filename, int instructionLength, int dataLength, const char **assemblyLines, int lineCount) {
-    FILE *file;
-
-    file = fopen(filename, "w");
-    if (!file) {
-        perror("Failed to open .ob file");
+    if (!outputFilename) {
+        perror("Failed to allocate memory for filename");
         exit(EXIT_FAILURE);
     }
 
-    /* Write the header */
-    writeHeader(file, instructionLength, dataLength);
+    strcpy(outputFilename, originFilename);
+    strcat(outputFilename, extension);
 
-    /* Write memory image */
-    writeMemoryImage(file, assemblyLines, lineCount);
-
-    fclose(file);
-    printf("File '%s' has been created successfully.\n", filename);
+    return outputFilename;
 }
 
-/* Function to write the header */
-void writeHeader(FILE *file, int instructionLength, int dataLength) {
-    fprintf(file, "%d %d\n", instructionLength, dataLength);
+/* Function to create the .ob file */
+void createObFile(const char *originFilename, const InputData *inputData) {
+    FILE *file;
+    Node *currentNode;
+    int octalContent;
+
+    char *obFilename = constructOutputFilename(originFilename, ".ob");
+
+    file = fopen(obFilename, "w");
+    if (!file) {
+        perror("Failed to open .ob file");
+        free(obFilename);
+        exit(EXIT_FAILURE);
+    }
+
+    /* Write the header with instruction and data lengths */
+    fprintf(file, "%d %d\n", inputData->instructionLength, inputData->dataLength);
+
+    /* Iterate over the linked list and write memory image */
+    currentNode = inputData->head;
+    while (currentNode != NULL) {
+        /* Convert binary line to octal */
+        octalContent = convertBinaryToOctal(currentNode->binaryLine);
+
+        /* Write address and octal content to the .ob file */
+        fprintf(file, "%04d %05o\n", currentNode->addressIndex, octalContent);
+
+        /* Move to the next node */
+        currentNode = currentNode->next;
+    }
+
+    fclose(file);
+    free(obFilename);
+    printf("File '%s' has been created successfully.\n", obFilename);
 }
 
 /* Function to create the .ent file */
-void createEntFile(const char *filename, const Symbol *symbolTable, int symbolCount) {
+void createEntFile(const char *originFilename, const Symbol *symbolTable, int symbolCount) {
     FILE *file;
+    int i;
 
-    file = fopen(filename, "w");
+    char *entFilename = constructOutputFilename(originFilename, ".ent");
+
+    file = fopen(entFilename, "w");
     if (!file) {
         perror("Failed to open .ent file");
+        free(entFilename);
         exit(EXIT_FAILURE);
     }
 
     /* Write entry symbols to the file */
-    for (int i = 0; i < symbolCount; ++i) {
+    for (i = 0; i < symbolCount; ++i) {
         if (symbolTable[i].isEntry) {
             fprintf(file, "%s %04d\n", symbolTable[i].name, symbolTable[i].address);
         }
     }
 
     fclose(file);
-    printf("File '%s' has been created successfully.\n", filename);
+    free(entFilename);
+    printf("File '%s' has been created successfully.\n", entFilename);
 }
 
 /* Function to create the .ext file */
-void createExtFile(const char *filename, const ExternalRef *externalRefs, int refCount) {
+void createExtFile(const char *originFilename, const ExternalRef *externalRefs) {
     FILE *file;
+    const ExternalRef *currentRef = externalRefs; /* Move declaration to the beginning */
 
-    file = fopen(filename, "w");
+    char *extFilename = constructOutputFilename(originFilename, ".ext");
+
+    file = fopen(extFilename, "w");
     if (!file) {
         perror("Failed to open .ext file");
+        free(extFilename);
         exit(EXIT_FAILURE);
     }
 
     /* Write external references to the file */
-    for (int i = 0; i < refCount; ++i) {
-        fprintf(file, "%s %04d\n", externalRefs[i].name, externalRefs[i].address);
+    while (currentRef != NULL) {
+        fprintf(file, "%s %04d\n", currentRef->name, currentRef->address);
+        currentRef = currentRef->next;
     }
 
     fclose(file);
-    printf("File '%s' has been created successfully.\n", filename);
+    free(extFilename);
+    printf("File '%s' has been created successfully.\n", extFilename);
 }
+
+
+
+/*
+int main() {
+    const char *originFilename = "program";
+
+     Example linked list of binary lines 
+    Node node3 = {000010001001010, 0102, NULL};
+    Node node2 = {000000011000100, 0101, &node3};
+    Node node1 = {001010000010100, 0100, &node2};
+    */
+    /* InputData inputData = {&node1, 10, 20};  Replace with actual instruction and data lengths 
+    */
+    /* Example symbol table - replace with actual symbols 
+    Symbol symbolTable[] = {
+        {"MAIN", 100, 1},
+        {"LIST", 137, 1}
+    };
+    int symbolCount = sizeof(symbolTable) / sizeof(symbolTable[0]); */
+
+    /* Example linked list of external references 
+    ExternalRef ref3 = {"fn1", 0104, NULL};
+    ExternalRef ref2 = {"L3", 0114, &ref3};
+    ExternalRef ref1 = {"L3", 0127, &ref2}; */
+    /* Create the .ob file 
+    createObFile(originFilename, &inputData); */
+
+    /* Create the .ent file 
+    createEntFile(originFilename, symbolTable, symbolCount);
+
+     Create the .ext file 
+    createExtFile(originFilename, &ref1);
+
+    return 0; */
