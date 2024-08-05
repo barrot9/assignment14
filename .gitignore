@@ -2,6 +2,7 @@ commands.txt
 test_Macro.txt
 test_Macro.asm
 ps.as
+ps.am
 invalid_Macro1.as
 invalid_Macro2.as
 main.o

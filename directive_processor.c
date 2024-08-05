@@ -1,18 +1,10 @@
+#include "directive_processor.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 
-#include "directive_processor.h"
-
-/* Function prototypes */
-void processDirective(const char *line);
-void processDataDirective(const char *parameters);
-void processStringDirective(const char *parameters);
-void processEntryDirective(const char *parameters);
-void processExternDirective(const char *parameters);
-
-/* Process a directive sentence */
+/* Processes a directive sentence from the given line */
 void processDirective(const char *line) {
     char directive[10];
     const char *parameters;
@@ -74,11 +66,10 @@ void processDataDirective(const char *parameters) {
 
 /* Process .string directive */
 void processStringDirective(const char *parameters) {
-    const char *start;
+    const char *start, *end;
     char *string;
-    const char *end;
-    size_t length;
-    size_t i;
+    size_t length, i;
+
     /* Check for starting double quote */
     if (*parameters != '"') {
         printf("Invalid string directive.\n");
