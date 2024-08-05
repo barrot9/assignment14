@@ -1,6 +1,8 @@
 #include "main.h"
+#include "macro_Handling.h"
 #include "line_recognizer.h"
 #include "directive_processor.h"
+#include "utils.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h> /* Include stdlib.h for exit */
@@ -35,10 +37,53 @@ void processFiles(int argc, char *argv[]) {
         /* If validation passes, process the file */
         processFile(filename);
 
-        /* Rename output file to match the input file with .am extension */
-        rename("output.asm", outputFilename);
+        /* Process the expanded file to recognize and handle sentence types */
+        processExpandedFile(outputFilename);
     }
 }
+
+/*
+ * processExpandedFile: Processes the expanded file to recognize and handle each sentence type.
+ */
+void processExpandedFile(const char *filename) {
+    char line[MAX_LINE_LENGTH + 2]; /* +2 to handle \n and \0 */
+    char label[MAX_LABEL_LENGTH + 1];
+    char *trimmedLine;
+    LineInfo *head = NULL,*info, *current;
+    LineType type;
+    FILE *file = fopen(filename, "r");
+
+    if (!file) {
+        perror("Could not open expanded file");
+        return;
+    }
+
+    while (fgets(line, sizeof(line), file)) {
+        trimmedLine = trimWhitespace(line);
+
+        /* Detect the line type and extract the label if present */
+        type = detectLineType(trimmedLine, label);
+
+        /* Create a new LineInfo and add it to the list */
+        info = createLineInfo(trimmedLine, type, label);
+        addLineToList(&head, info);
+
+        /* Other line types like comments and empty lines are already handled by recognizeLineType */
+    }
+
+    fclose(file);
+     /* Print all lines and their types */
+    printLines(head);
+
+    /* Free the linked list */
+    current = head;
+    while (current) {
+        LineInfo *next = current->next;
+        free(current);
+        current = next;
+    }
+}
+
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
