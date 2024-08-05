@@ -1,7 +1,7 @@
 commands.txt
 test_Macro.txt
 test_Macro.asm
-good_Macro.as
+ps.as
 invalid_Macro1.as
 invalid_Macro2.as
 main.o
