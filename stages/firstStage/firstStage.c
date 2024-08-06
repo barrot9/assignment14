@@ -6,9 +6,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "struct.h" /* Symbol and program structure definitions */
-#include "logic.h"  /* Parsing logic and opcode definitions */
-#include "supp.h"   /* Supporting utilities */
+#include "stages/utils/struct.h" /* Symbol and program structure definitions */
+#include "stages/utils/logic.h"  /* Parsing logic and opcode definitions */
+#include "stages/utils/supp.h"   /* Supporting utilities */
 
 /*
  * The 'first' function processes an assembly file and updates the symbol table.
