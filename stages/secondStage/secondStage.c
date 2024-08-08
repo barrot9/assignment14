@@ -1,13 +1,8 @@
 /*
-   secondStage.c
-
    This file implements the `secondStage` function, which conducts the second pass
    of an assembly language file to complete the generation of machine code and data sections.
    The function reads through the assembly file, processes each line to resolve symbols,
-   update the code and data sections, and handle external references. It ensures that all
-   symbols are correctly addressed and that any errors, such as undefined symbols, are 
-   reported. The file relies on parsing utilities to interpret each line of the assembly code 
-   and utilizes the `SymbolTableManager` to manage symbols and sections.
+   update the code and data sections, and handle external references. 
 */
 
 #include <stdio.h>
@@ -21,14 +16,6 @@
  * Processes the second pass of an assembly file to complete code and data section generation.
  * This function analyzes each line of the assembly code, updates code and data sections, 
  * resolves symbols, and handles external references.
- *
- * Parameters:
- * - symbolManager: Pointer to the SymbolTableManager struct managing code, data, and symbols.
- * - AMFILE: Pointer to the assembly file to be processed.
- * - AMFILENAME: String containing the name of the assembly file, used for error reporting.
- *
- * Returns:
- * - int: Error status. Returns 0 if successful, or 1 if any errors are encountered.
  */
 int secondStage(struct SymbolTableManager* symbolManager, FILE* AMFILE, char *AMFILENAME) {
     int err = 0; /* Error flag initialized to 0 */
