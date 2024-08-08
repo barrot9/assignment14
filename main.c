@@ -1,7 +1,6 @@
 #include "main.h"
 #include "stages/preProcessor/macro_Handling.h"
 #include "line_recognizer.h"
-#include "directive_processor.h"
 #include "utils.h"
 #include <string.h>
 #include <stdio.h>
