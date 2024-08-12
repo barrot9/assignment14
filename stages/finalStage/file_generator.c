@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "stages/finalStage/file_generator.h"
+#include "file_generator.h"
 
 /* Function to convert a short (15-bit binary number) to octal */
 int convertShortToOctal(short binaryValue) {
