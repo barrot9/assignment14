@@ -1,7 +1,8 @@
 #include "main.h"
 #include "stages/preProcessor/macro_Handling.h"
 #include "line_recognizer.h"
-#include "utils.h"
+#include "stages/utils/utils.h"
+#include "line_validator.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h> /* Include stdlib.h for exit */
@@ -48,8 +49,9 @@ void processExpandedFile(const char *filename) {
     char line[MAX_LINE_LENGTH + 2]; /* +2 to handle \n and \0 */
     char label[MAX_LABEL_LENGTH + 1];
     char *trimmedLine;
-    LineInfo *head = NULL,*info, *current;
+    LineInfo *head = NULL, *info, *current;
     LineType type;
+    int opcode;
     FILE *file = fopen(filename, "r");
 
     if (!file) {
@@ -58,20 +60,36 @@ void processExpandedFile(const char *filename) {
     }
 
     while (fgets(line, sizeof(line), file)) {
-        trimmedLine = trimWhitespace(line);
+    printf("fgets read: %s\n", line);  /* Debugging output */
 
-        /* Detect the line type and extract the label if present */
-        type = detectLineType(trimmedLine, label);
+    trimmedLine = trimWhitespace(line);
+    printf("Trimmed line: '%s'\n", trimmedLine);  /* Debugging output */
 
-        /* Create a new LineInfo and add it to the list */
-        info = createLineInfo(trimmedLine, type, label);
-        addLineToList(&head, info);
-
-        /* Other line types like comments and empty lines are already handled by recognizeLineType */
+    /* Validate the line before processing it further */
+    if (!validateLine(trimmedLine, label, &type, &opcode)) {
+        fprintf(stderr, "Error: Invalid line detected in file '%s'. Skipping line.\n", filename);
+        continue;
     }
+    printf("Line passed validation: %s\n", trimmedLine);  /* Debugging output */
+
+    /* Detect the line type and extract the label if present */
+    type = detectLineType(trimmedLine, label);
+    printf("Type detected after validation: %d\n", type);  /* Debugging output */
+
+    /* Create a new LineInfo and add it to the list */
+    info = createLineInfo(trimmedLine, type, label);
+    printf("LineInfo created for: %s\n", trimmedLine);  /* Debugging output */
+    
+    addLineToList(&head, info);
+    printf("Line added to list: %s\n", trimmedLine);  /* Debugging output */
+
+    printf("Looping back to read next line.\n");  /* Debugging output */
+}
+
 
     fclose(file);
-     /* Print all lines and their types */
+
+    /* Print all lines and their types */
     printLines(head);
 
     /* Free the linked list */
@@ -82,6 +100,8 @@ void processExpandedFile(const char *filename) {
         current = next;
     }
 }
+
+
 
 
 int main(int argc, char *argv[]) {
