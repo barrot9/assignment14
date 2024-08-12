@@ -38,4 +38,8 @@ typedef struct LineInfo {
     struct LineInfo *next;
 } LineInfo;
 
+/* Array of valid registers */
+extern const char *registers[];
+extern const int numRegisters;
+
 #endif /* LINE_INFO_H */

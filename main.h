@@ -4,6 +4,7 @@
 #include "stages/preProcessor/macro_Handling.h"
 #include "stages/preProcessor/macro_validation.h"
 #include "line_recognizer.h"
+#include "stages/utils/utils.h"
 
 #include <stdio.h>
 #include <stdlib.h>

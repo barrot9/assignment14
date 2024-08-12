@@ -1,6 +1,6 @@
 #include "line_recognizer.h"
 #include "line_info.h"
-#include "utils.h"
+#include "stages/utils/utils.h"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
