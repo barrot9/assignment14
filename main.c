@@ -60,10 +60,8 @@ void processExpandedFile(const char *filename) {
     }
 
     while (fgets(line, sizeof(line), file)) {
-    printf("fgets read: %s\n", line);  /* Debugging output */
 
     trimmedLine = trimWhitespace(line);
-    printf("Trimmed line: '%s'\n", trimmedLine);  /* Debugging output */
 
     /* Validate the line before processing it further */
     if (!validateLine(trimmedLine, label, &type, &opcode)) {
@@ -74,11 +72,9 @@ void processExpandedFile(const char *filename) {
 
     /* Detect the line type and extract the label if present */
     type = detectLineType(trimmedLine, label);
-    printf("Type detected after validation: %d\n", type);  /* Debugging output */
 
     /* Create a new LineInfo and add it to the list */
     info = createLineInfo(trimmedLine, type, label);
-    printf("LineInfo created for: %s\n", trimmedLine);  /* Debugging output */
     
     addLineToList(&head, info);
     printf("Line added to list: %s\n", trimmedLine);  /* Debugging output */
