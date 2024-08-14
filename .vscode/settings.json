@@ -2,6 +2,7 @@
     "files.associations": {
         "macro_validation.h": "c",
         "utils.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "line_info.h": "c"
     }
 }

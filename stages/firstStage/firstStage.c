@@ -9,42 +9,43 @@
 #include "stages/utils/struct.h" /* Symbol and program structure definitions */
 #include "stages/utils/logic.h"  /* Parsing logic and opcode definitions */
 #include "stages/utils/supp.h"   /* Supporting utilities */
+#include "stages/lineAnalyzer/line_info.h" /* LineInfo structure and related definitions */
 
 /*
  * The 'first' function processes an assembly file and updates the symbol table.
  * It parses lines to determine whether they define data, code, or directives
  * and updates the instruction and data counters accordingly.
  */
-int first(struct SymbolTableManager* symbolManager, FILE *AMFILE, char *AMFILENAME) {
+int first(struct SymbolTableManager* symbolManager, LineInfo* head) {
     int err = 0;               /* Error indicator */
-    char line[81] = {0};       /* Line buffer for reading the file */
-    extern struct AssemblyLine p_line; /* Parsed line structure */
-    struct symbol *symbol_f;   /* Pointer for symbol lookup */
+    LineInfo* current = head;  /* Pointer to the current node in the linked list */
+    struct symbol* symbol_f;   /* Pointer for symbol lookup */
     int line_c = 1;            /* Line count starts from 1 */
     int ic = 100;              /* Instruction counter starts from 100 */
     int dc = 0;                /* Data counter starts from 0 */
     int i;                     /* General-purpose loop variable */
 
-    /* Process each line of the assembly file */
-    while (fgets(line, sizeof(line), AMFILE)) {
-        parser(line); /* Invoke parser on the current line */
-
-        /* Check for parsing errors */
-        if (p_line.err[0] != '\0') {
-            err = 1; /* Mark error */
-            print_error(AMFILENAME, line_c, "parser error: %s", p_line.err);
+    /* Iterate through the linked list of parsed lines */
+    while (current != NULL) {
+        /* Check for errors in the current line */
+        if (current->type == LINE_UNKNOWN) {
+            err = 1;
+            print_error("Error in line", line_c, "Unknown line type or unrecognized instruction");
             line_c++;
-            continue; /* Proceed to the next line */
+            current = current->next;
+            continue;
         }
 
         /* Handle lines with labels that are either directives or code */
-        if (p_line.label && ((p_line.line_type == directive_line && p_line.directive_type <= data) || p_line.line_type == code_line)) {
-            symbol_f = sym_search_function(symbolManager, p_line.label); /* Search for the symbol */
+        if (strlen(current->label) > 0 &&
+            (current->type == LINE_DIRECTIVE || current->type == LINE_INSTRUCTION)) {
+            
+            symbol_f = sym_search_function(symbolManager, current->label); /* Search for the symbol */
 
             if (symbol_f) { /* If symbol is found */
                 if (symbol_f->sym_type == new_type_entry_temporary) {
                     /* Update symbol information based on line type */
-                    if (p_line.line_type == code_line) {
+                    if (current->type == LINE_INSTRUCTION) {
                         symbol_f->addr = ic;
                         symbol_f->defined_in_line = line_c;
                         symbol_f->sym_type = new_type_entry_code;
@@ -54,85 +55,84 @@ int first(struct SymbolTableManager* symbolManager, FILE *AMFILE, char *AMFILENA
                         symbol_f->sym_type = new_type_entry_data;
                     }
                 } else {
-                    err = 0; /* Reset error flag */
-                    print_error(AMFILENAME, line_c, "redefinition of symbol:'%s'", symbol_f->name);
+                    err = 1;
+                    print_error("Error in line", line_c, "Redefinition of symbol:'%s'", symbol_f->name);
                 }
             } else {
                 /* Add new symbol based on line type */
-                if (p_line.line_type == code_line) {
-                    add_symbol(symbolManager, p_line.label, new_type_code, ic, line_c, 0, 0);
+                if (current->type == LINE_INSTRUCTION) {
+                    add_symbol(symbolManager, current->label, new_type_code, ic, line_c, 0, 0);
                 } else {
-                    if (p_line.directive_type == data) {
-                        add_symbol(symbolManager, p_line.label, new_type_data, dc, line_c, 0, p_line.data_size);
+                    if (strncmp(current->line, ".data", 5) == 0) {
+                        add_symbol(symbolManager, current->label, new_type_data, dc, line_c, 0, current->operandCount);
+                    } else if (strncmp(current->line, ".string", 7) == 0) {
+                        add_symbol(symbolManager, current->label, new_type_data, dc, line_c, 0, strlen(current->operands[0]));
                     } else {
-                        add_symbol(symbolManager, p_line.label, new_type_data, dc, line_c, 0, strlen(p_line.dir_str));
+                        add_symbol(symbolManager, current->label, new_type_data, dc, line_c, 0, 0);
                     }
                 }
             }
         }
 
-        /* Update instruction counter for code lines */
-        if (p_line.line_type == code_line) {
+        /* Update instruction counter for instruction lines */
+        if (current->type == LINE_INSTRUCTION) {
             ic++;
             /* Check and handle operand types */
-            if ((p_line.inst_operand_type[0] == operand_direct_register || p_line.inst_operand_type[0] == operand_indirect_register) &&
-                (p_line.inst_operand_type[1] == operand_direct_register || p_line.inst_operand_type[1] == operand_indirect_register)) {
-                ic++;
-            } else {
-                for (i = 0; i < 2; i++) {
-                    switch (p_line.inst_operand_type[i]) {
-                        case operand_immed:
-                        case operand_direct_register:
-                        case operand_indirect_register:
-                        case operand_label:
-                            ic++;
-                            break;
-                        default:
-                            break;
-                    }
+            for (i = 0; i < current->operandCount; i++) {
+                switch (current->addressingMethods[i]) {
+                    case ADDRESSING_IMMEDIATE:
+                    case ADDRESSING_DIRECT:
+                    case ADDRESSING_INDIRECT_REGISTER:
+                    case ADDRESSING_DIRECT_REGISTER:
+                        ic++;
+                        break;
+                    default:
+                        break;
                 }
             }
         }
-        /* Update data counter for data directives */
-        else if (p_line.line_type == directive_line && p_line.directive_type <= data) {
-            if (p_line.directive_type == data) {
-                dc += p_line.data_size;
-            } else {
-                dc += strlen(p_line.dir_str) + 1;
+        /* Update data counter for .data and .string directives */
+        else if (current->type == LINE_DIRECTIVE) {
+            if (strncmp(current->line, ".data", 5) == 0) {
+                dc += current->operandCount;
+            } else if (strncmp(current->line, ".string", 7) == 0) {
+                dc += strlen(current->operands[0]) + 1;
             }
         }
         /* Handle entry and external directives */
-        else if ((p_line.line_type == directive_line && p_line.directive_type > data)) {
-            symbol_f = sym_search_function(symbolManager, p_line.dir_label);
+        else if (current->isEntry || current->isExtern) {
+            symbol_f = sym_search_function(symbolManager, current->label);
             if (symbol_f) {
-                if (p_line.directive_type == entry) {
+                if (current->isEntry) {
                     if (symbol_f->sym_type == new_type_code) {
                         symbol_f->sym_type = new_type_entry_code;
                     } else if (symbol_f->sym_type == new_type_data) {
                         symbol_f->sym_type = new_type_entry_data;
                     } else {
                         err = 1;
-                        print_error(AMFILENAME, line_c, "redefinition of symbol:'%s'", symbol_f->name);
+                        print_error("Error in line", line_c, "Redefinition of symbol:'%s'", symbol_f->name);
                     }
                 } else {
                     err = 1;
-                    print_error(AMFILENAME, line_c, "redefinition of symbol:'%s'", symbol_f->name);
+                    print_error("Error in line", line_c, "Redefinition of symbol:'%s'", symbol_f->name);
                 }
             } else {
-                if (p_line.directive_type == entry) {
-                    add_symbol(symbolManager, p_line.dir_label, new_type_entry_temporary, 0, line_c, 0, 0);
+                if (current->isEntry) {
+                    add_symbol(symbolManager, current->label, new_type_entry_temporary, 0, line_c, 0, 0);
                 } else {
-                    add_symbol(symbolManager, p_line.dir_label, new_type_external, 0, line_c, 0, 0);
+                    add_symbol(symbolManager, current->label, new_type_external, 0, line_c, 0, 0);
                 }
             }
         }
         line_c++; /* Increment line count */
+        current = current->next; /* Move to the next node in the linked list */
     }
 
     /* Final adjustments to symbol addresses and handling entries */
     for (i = 0; i < symbolManager->symbols_size; i++) {
         if (symbolManager->symbols[i].sym_type == new_type_entry_temporary) {
             err = 1; /* Flag error for temporary entries */
+            print_error("Error", 0, "Unresolved entry: '%s'", symbolManager->symbols[i].name);
         } else {
             if (symbolManager->symbols[i].sym_type == new_type_data || symbolManager->symbols[i].sym_type == new_type_entry_data) {
                 symbolManager->symbols[i].addr += ic; /* Adjust data symbol address */

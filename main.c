@@ -3,6 +3,7 @@
 #include "stages/lineAnalyzer/line_recognizer.h"
 #include "stages/utils/utils.h"
 #include "stages/lineAnalyzer/line_validator.h"
+#include "stages/utils/struct.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h> /* Include stdlib.h for exit */
@@ -80,8 +81,23 @@ void processExpandedFile(const char *filename) {
             printf("Line added to list: %s\n", trimmedLine);  /* Debugging output */
         }
         lineNumber++;
-        /*CALL FOR THE FIRST STAGE*/
 }
+
+    int result = first(&symbolManager, head); /* call for the first pass function */
+    /* Check for errors */ 
+    if (result) {
+        printf("Errors occurred during the first pass.\n");
+    } else {
+        printf("First pass completed successfully.\n");
+    }
+
+    int err = secondStage(&symbolManager, head); /* call for the second pass function */
+    /* Check for errors */
+    if (err) {
+        printf("Errors encountered during second stage processing.\n");
+    } else {
+        printGeneratedCode(&symbolManager); /* Print the generated code (for testing only)*/ 
+    }
 
 
     fclose(file);
