@@ -4,6 +4,8 @@
 
 extern const char *commands[];
 extern int numCommands;
+extern const char *reservedWords[];
+extern const int numReservedWords;
 
 bool isReservedWord(const char *word);
 
