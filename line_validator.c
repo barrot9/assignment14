@@ -48,9 +48,7 @@ bool isValidRegister(const char *operand) {
 
 bool isValidLabel(const char *label) {
     int i;  /* Declare the loop variable at the beginning */
-    printf("Validating label: %s\n", label);  /* Debugging output */
-    
-    
+    printf("LABEL: %c\n", label);
     /* Check that the label starts with a letter */
     if (!isalpha(label[0])) {
         printf("Label does not start with an alphabet character.\n");  /* Debugging output */
@@ -70,8 +68,6 @@ bool isValidLabel(const char *label) {
         printf("Label exceeds max length.\n");  /* Debugging output */
         return false;
     }
-
-    printf("Label is valid.\n");  /* Debugging output */
     return true;
 }
 
@@ -105,7 +101,7 @@ bool isCommandRecognized(const char *command, int *opcode) {
 bool validateLine(const char *line, char *label, LineType *type, int *opcode) {
     char command[MAX_LINE_LENGTH];
     char modifiableLine[MAX_LINE_LENGTH + 1]; /* Create a modifiable copy of the line */
-    char *ptr, *token, *stringStart, *stringEnd, *extraText, *dataPtr;
+    char *ptr, *token, *stringStart, *stringEnd, *dataPtr;
     int operandCount = 0;
     int i, expectedOperands;
     char *operands[MAX_OPERANDS];
@@ -123,7 +119,6 @@ bool validateLine(const char *line, char *label, LineType *type, int *opcode) {
 
     /* Detect the line type */
     *type = detectLineType(modifiableLine, label);
-    printf("Line type detected: %d\n", *type);  /* Debugging output */
 
      /* Handle label and move the pointer correctly */
     labelLength = 0;
@@ -139,11 +134,12 @@ bool validateLine(const char *line, char *label, LineType *type, int *opcode) {
     } else {
         ptr = modifiableLine;  /* No label, start from the beginning */
     }
-
-    if (*type == LINE_INSTRUCTION) {
+    if (*type == LINE_EMPTY || *type == LINE_COMMENT) {
+        return true;
+    }
+    else if (*type == LINE_INSTRUCTION) {
         /* Extract the command */
         sscanf(ptr, "%s", command);
-        printf("Command: %s\n", command);  /* Debugging output */
 
         /* Move the pointer past the command */
         ptr += strlen(command);
@@ -181,7 +177,7 @@ bool validateLine(const char *line, char *label, LineType *type, int *opcode) {
 
         /* Validate operands */
         for (i = 0; i < operandCount; i++) {
-            if (operands[i][0] == '#') {
+            if (operands[i][0] == '#' && operands[i][1] != '-') {
                 if (!isValidInteger(operands[i] + 1)) {
                     fprintf(stderr, "Error: Invalid immediate operand '%s'.\n", operands[i]);
                     return false;
@@ -213,7 +209,6 @@ bool validateLine(const char *line, char *label, LineType *type, int *opcode) {
         }
 
     } else if (*type == LINE_DIRECTIVE) {
-        printf("Directive type line detected.\n");  /* Debugging output */
         if (strncmp(ptr, ".data", 5) == 0) {
             /* Validate .data operands */
             dataPtr = ptr + 5;
@@ -242,7 +237,11 @@ bool validateLine(const char *line, char *label, LineType *type, int *opcode) {
             }
 
             /* Check for extra text after the closing quote */
-            if (stringEnd[1] != '\0' && !isspace((unsigned char)stringEnd[1])) {
+            stringEnd++;
+            while (isspace((unsigned char)*stringEnd)) {
+                stringEnd++;
+            }
+            if (*stringEnd != '\0') {
                 fprintf(stderr, "Error: Extra text after closing quote in .string directive.\n");
                 return false;
             }
@@ -298,7 +297,7 @@ bool validateLine(const char *line, char *label, LineType *type, int *opcode) {
         fprintf(stderr, "Error: Unexpected or undefined keyword in line: '%s'.\n", line);
         return false;
     }
-    printf("LINE IS GOOD!! .\n");
+    
     return true; /* Line is valid */
 }
 

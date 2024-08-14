@@ -62,31 +62,28 @@ void processExpandedFile(const char *filename) {
     while (fgets(line, sizeof(line), file)) {
 
     trimmedLine = trimWhitespace(line);
-
-    /* Validate the line before processing it further */
-    if (!validateLine(trimmedLine, label, &type, &opcode)) {
-        fprintf(stderr, "Error: Invalid line detected in file '%s'. Skipping line.\n", filename);
-        continue;
-    }
-    printf("Line passed validation: %s\n", trimmedLine);  /* Debugging output */
-
     /* Detect the line type and extract the label if present */
     type = detectLineType(trimmedLine, label);
 
-    /* Create a new LineInfo and add it to the list */
-    info = createLineInfo(trimmedLine, type, label);
+    if (type == LINE_DIRECTIVE || type == LINE_INSTRUCTION) {
+        /* Validate the line before processing it further */
+        if (!validateLine(trimmedLine, label, &type, &opcode)) {
+            fprintf(stderr, "Error: Invalid line detected in file '%s'. Skipping line.\n", filename);
+            continue;
+        }
+        /* Create a new LineInfo and add it to the list */
+        info = createLineInfo(trimmedLine, type, label);
+        addLineToList(&head, info);
+        printf("Line added to list: %s\n", trimmedLine);  /* Debugging output */
+    }
     
-    addLineToList(&head, info);
-    printf("Line added to list: %s\n", trimmedLine);  /* Debugging output */
-
-    printf("Looping back to read next line.\n");  /* Debugging output */
 }
 
 
     fclose(file);
 
     /* Print all lines and their types */
-    printLines(head);
+    /*printLines(head); */
 
     /* Free the linked list */
     current = head;
