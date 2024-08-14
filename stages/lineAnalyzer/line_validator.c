@@ -1,6 +1,7 @@
 #include "line_validator.h"
 #include "line_recognizer.h"
-#include "stages/utils/utils.h"
+#include "../utils/utils.h"
+#include "../preProcessor/macro_validation.h"
 #include "line_info.h"
 #include <ctype.h>
 #include <string.h>
@@ -47,27 +48,42 @@ bool isValidRegister(const char *operand) {
 }
 
 bool isValidLabel(const char *label) {
-    int i;  /* Declare the loop variable at the beginning */
-    printf("LABEL: %c\n", label);
+    int i;
+    /* Ensure that label is not empty*/
+    if (strlen(label) == 0) {
+        return false;
+    }
+
+    if (isMacroName(label)) {
+        printf("Label conflicts with a macro name: %s\n", label);
+        return false;
+    }
     /* Check that the label starts with a letter */
     if (!isalpha(label[0])) {
-        printf("Label does not start with an alphabet character.\n");  /* Debugging output */
+        printf("Label: %s does not start with an alphabet character.\n", label);
         return false;
     }
 
     /* Check that the rest of the label is alphanumeric */
     for (i = 1; label[i] != '\0'; i++) {
         if (!isalnum(label[i])) {
-            printf("Non-alphanumeric character found: %c\n", label[i]);  /* Debugging output */
+            printf("Non-alphanumeric character found: %c\n", label[i]);
             return false;
         }
     }
 
     /* Check label length */
     if (strlen(label) > MAX_LABEL_LENGTH) {
-        printf("Label exceeds max length.\n");  /* Debugging output */
+        printf("Label exceeds max length.\n");
         return false;
     }
+
+    /* Check if the label is a reserved word */
+    if (isReservedWord(label)) {
+        printf("Error: Label '%s' is a reserved word.\n", label);
+        return false;
+    }
+
     return true;
 }
 
@@ -98,18 +114,17 @@ bool isCommandRecognized(const char *command, int *opcode) {
 }
 
 
-bool validateLine(const char *line, char *label, LineType *type, int *opcode) {
+bool validateLine(const char *line, char *label, LineType *type, int *opcode, int lineNumber) {
     char command[MAX_LINE_LENGTH];
     char modifiableLine[MAX_LINE_LENGTH + 1]; /* Create a modifiable copy of the line */
     char *ptr, *token, *stringStart, *stringEnd, *dataPtr;
     int operandCount = 0;
     int i, expectedOperands;
     char *operands[MAX_OPERANDS];
-    int labelLength;
 
     /* Check if line length is above 80 characters */
     if (strlen(line) > MAX_LINE_LENGTH) {
-        fprintf(stderr, "Error: Line exceeds 80 characters.\n");
+        fprintf(stderr, "Error on line %d: Line exceeds 80 characters.\n", lineNumber);
         return false;
     }
 
@@ -117,29 +132,37 @@ bool validateLine(const char *line, char *label, LineType *type, int *opcode) {
     strncpy(modifiableLine, line, MAX_LINE_LENGTH);
     modifiableLine[MAX_LINE_LENGTH] = '\0';
 
+    /* Reset label */
+    label[0] = '\0';
+
+    /* Check if the line contains a label */
+    ptr = modifiableLine;
+    if (strchr(modifiableLine, ':') != NULL) {
+        /* Extract the label up to the colon */
+        sscanf(modifiableLine, "%[^:]", label);
+        if (!isValidLabel(label)) {
+            fprintf(stderr, "Error on line %d: Invalid label '%s'.\n", lineNumber, label);
+            return false;
+        }
+
+        /* Move the pointer past the label and colon */
+        ptr = strchr(modifiableLine, ':') + 1;
+        ptr = trimWhitespace(ptr);  /* Trim any leading whitespace */
+    }
+
     /* Detect the line type */
     *type = detectLineType(modifiableLine, label);
-
-     /* Handle label and move the pointer correctly */
-    labelLength = 0;
-    ptr = modifiableLine;
-    while (*ptr != ':' && *ptr != '\0') {
-        labelLength++;
-        ptr++;
-    }
-
-    if (*ptr == ':') {
-        ptr++;  /* Move past the colon */
-        ptr = trimWhitespace(ptr);  /* Trim any leading whitespace */
-    } else {
-        ptr = modifiableLine;  /* No label, start from the beginning */
-    }
+    
     if (*type == LINE_EMPTY || *type == LINE_COMMENT) {
         return true;
-    }
-    else if (*type == LINE_INSTRUCTION) {
+    } else if (*type == LINE_INSTRUCTION) {
         /* Extract the command */
         sscanf(ptr, "%s", command);
+
+        /* Remove trailing comma, if present */
+        if (command[strlen(command) - 1] == ',') {
+            command[strlen(command) - 1] = '\0';
+        }
 
         /* Move the pointer past the command */
         ptr += strlen(command);
@@ -149,9 +172,17 @@ bool validateLine(const char *line, char *label, LineType *type, int *opcode) {
 
         /* Parse operands */
         while (*ptr != '\0' && operandCount < MAX_OPERANDS) {
-            /* Extract operand */
+            /* Skip any leading whitespace */
+            while (isspace((unsigned char)*ptr)) {
+                ptr++;
+            }
+
+            /* Start of an operand */
             token = ptr;
-            while (*ptr != ',' && *ptr != '\0') ptr++;
+            /* Find the end of the operand */
+            while (*ptr != ',' && !isspace((unsigned char)*ptr) && *ptr != '\0') {
+                ptr++;
+            } 
 
             if (*ptr == ',') {
                 *ptr++ = '\0';  /* Null-terminate the operand and move past the comma */
@@ -167,44 +198,55 @@ bool validateLine(const char *line, char *label, LineType *type, int *opcode) {
 
         /* Check if command is recognized and in lowercase */
         if (!isCommandLowercase(command)) {
-            fprintf(stderr, "Error: Command '%s' is not in lowercase.\n", command);
+            fprintf(stderr, "Error on line %d: Command '%s' is not in lowercase.\n", lineNumber, command);
             return false;
         }
         if (!isCommandRecognized(command, opcode)) {
-            fprintf(stderr, "Error: Command '%s' is not recognized.\n", command);
+            fprintf(stderr, "Error on line %d: Command '%s' is not recognized.\n", lineNumber, command);
             return false;
         }
 
         /* Validate operands */
         for (i = 0; i < operandCount; i++) {
-            if (operands[i][0] == '#' && operands[i][1] != '-') {
+            if (operands[i][0] == '#') {
+                /* Immediate operand */
                 if (!isValidInteger(operands[i] + 1)) {
-                    fprintf(stderr, "Error: Invalid immediate operand '%s'.\n", operands[i]);
+                    fprintf(stderr, "Error on line %d: Invalid immediate operand '%s'.\n", lineNumber, operands[i]);
                     return false;
                 }
             } else if (operands[i][0] == '*') {
+                /* Register operand */
                 if (!isValidRegister(operands[i] + 1)) {
-                    fprintf(stderr, "Error: Invalid register '%s'.\n", operands[i]);
+                    fprintf(stderr, "Error on line %d: Invalid register operand '%s'.\n", lineNumber, operands[i]);
                     return false;
                 }
             } else {
-                if (!isValidRegister(operands[i]) && !isValidLabel(operands[i])) {
-                    fprintf(stderr, "Error: Invalid operand '%s'.\n", operands[i]);
+                /* Potential Label: Check if it starts with an alphabetic character */
+                if (isalpha(operands[i][0])) {
+                    /* Check if it's a valid label */
+                    if (!isValidLabel(operands[i])) {
+                        fprintf(stderr, "Error on line %d: Invalid label '%s'.\n", lineNumber, operands[i]);
+                        return false;
+                    }
+                } else {
+                    /* If it doesn't start with a letter, it can't be a label */
+                    fprintf(stderr, "Error on line %d: Invalid operand '%s'.\n", lineNumber, operands[i]);
                     return false;
                 }
             }
         }
 
+
         /* Check operand count based on the command */
         expectedOperands = getExpectedOperandCount(*opcode);
-        if (operandCount > expectedOperands) {
-            fprintf(stderr, "Error: Command '%s' expects %d operands but got %d.\n", command, expectedOperands, operandCount);
+        if (operandCount < expectedOperands) {
+            fprintf(stderr, "Error on line %d: Command '%s' expects %d operands but got %d.\n", lineNumber, command, expectedOperands, operandCount);
             return false;
         }
 
         /* Check for extra text after operands */
         if (*ptr != '\0') {
-            fprintf(stderr, "Error: Extra text after operands in command '%s'.\n", command);
+            fprintf(stderr, "Error on line %d: Extra text after operands in command '%s'.\n", lineNumber, command);
             return false;
         }
 
@@ -223,7 +265,7 @@ bool validateLine(const char *line, char *label, LineType *type, int *opcode) {
 
                 token = trimWhitespace(token);
                 if (!isValidInteger(token)) {
-                    fprintf(stderr, "Error: Invalid integer '%s' in .data directive.\n", token);
+                    fprintf(stderr, "Error on line %d: Invalid integer '%s' in .data directive.\n", lineNumber, token);
                     return false;
                 }
             }
@@ -232,7 +274,7 @@ bool validateLine(const char *line, char *label, LineType *type, int *opcode) {
             stringStart = strchr(ptr, '"');
             stringEnd = strrchr(ptr, '"');
             if (!stringStart || stringStart == stringEnd) {
-                fprintf(stderr, "Error: Invalid string in .string directive.\n");
+                fprintf(stderr, "Error on line %d: Invalid string in .string directive.\n", lineNumber);
                 return false;
             }
 
@@ -242,7 +284,7 @@ bool validateLine(const char *line, char *label, LineType *type, int *opcode) {
                 stringEnd++;
             }
             if (*stringEnd != '\0') {
-                fprintf(stderr, "Error: Extra text after closing quote in .string directive.\n");
+                fprintf(stderr, "Error on line %d: Extra text after closing quote in .string directive.\n", lineNumber);
                 return false;
             }
         } else if (strncmp(ptr, ".entry", 6) == 0 || strncmp(ptr, ".extern", 7) == 0) {
@@ -268,12 +310,12 @@ bool validateLine(const char *line, char *label, LineType *type, int *opcode) {
             
             label[i] = '\0';
             if (strlen(label) == 0) {
-                fprintf(stderr, "Error: Label is missing after directive.\n");
+                fprintf(stderr, "Error on line %d: Label is missing after directive.\n", lineNumber);
                 return false;
             }
             
             if (!isValidLabel(label)) {
-                fprintf(stderr, "Error: Invalid label '%s' in directive.\n", label);
+                fprintf(stderr, "Error on line %d: Invalid label '%s' in directive.\n", lineNumber, label);
                 return false;
             }
 
@@ -285,16 +327,16 @@ bool validateLine(const char *line, char *label, LineType *type, int *opcode) {
            
             
             if (*ptr != '\0') {
-                fprintf(stderr, "Error: Extra text after label in directive '%s'.\n", line);
+                fprintf(stderr, "Error on line %d: Extra text after label in directive '%s'.\n", lineNumber, line);
                 return false;
             }
         } else {
-            fprintf(stderr, "Error: Unknown directive '%s'.\n", ptr);
+            fprintf(stderr, "Error on line %d: Unknown directive '%s'.\n", lineNumber, ptr);
             return false;
         }
     } else {
         /* Handle unexpected or undefined keywords */
-        fprintf(stderr, "Error: Unexpected or undefined keyword in line: '%s'.\n", line);
+        fprintf(stderr, "Error on line %d: Unexpected or undefined keyword in line: '%s'.\n", lineNumber, line);
         return false;
     }
     

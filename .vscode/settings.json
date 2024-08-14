@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "macro_validation.h": "c"
+        "macro_validation.h": "c",
+        "utils.h": "c",
+        "stdio.h": "c"
     }
 }

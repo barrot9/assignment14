@@ -1,7 +1,8 @@
 #include "utils.h"
 #include <ctype.h>
 #include <string.h>
-
+#include <stdbool.h>
+#include <stdio.h>
 /* Array of supported commands */
 const char *commands[] = {
     "mov", "cmp", "add", "sub", "lea", "clr", "not", "inc",
@@ -10,6 +11,23 @@ const char *commands[] = {
 
 /* Number of supported commands */
 int numCommands = sizeof(commands) / sizeof(commands[0]);
+
+bool isReservedWord(const char *word) {
+    const char *reservedWords[] = {
+        "mov", "cmp", "add", "sub", "lea", 
+        "clr", "not", "inc", "dec", "jmp", 
+        "bne", "red", "prn", "jsr", "rts", "stop", 
+        ".data", ".string", ".entry", ".extern"
+    };
+    int numReservedWords = sizeof(reservedWords) / sizeof(reservedWords[0]);
+    
+    for (int i = 0; i < numReservedWords; i++) {
+        if (strcmp(word, reservedWords[i]) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
 
 /* Implementation of trimWhitespace function */
 char *trimWhitespace(char *str) {

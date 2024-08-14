@@ -1,14 +1,13 @@
 #ifndef UTILS_H
 #define UTILS_H
+#include <stdbool.h>
 
 extern const char *commands[];
 extern int numCommands;
-/**
- * Trims leading and trailing whitespace from a string.
- * 
- * @param str The string to trim.
- * @return A pointer to the trimmed string.
- */
+
+bool isReservedWord(const char *word);
+
+/* Trims leading and trailing whitespace from a string. */
 char *trimWhitespace(char *str);
 
 /* Function to get the number of commands */

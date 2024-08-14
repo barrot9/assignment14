@@ -1,8 +1,8 @@
 #include "main.h"
 #include "stages/preProcessor/macro_Handling.h"
-#include "line_recognizer.h"
+#include "stages/lineAnalyzer/line_recognizer.h"
 #include "stages/utils/utils.h"
-#include "line_validator.h"
+#include "stages/lineAnalyzer/line_validator.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h> /* Include stdlib.h for exit */
@@ -13,14 +13,17 @@
 void processFiles(int argc, char *argv[]) {
     int i;
     char outputFilename[MAX_LINE_LENGTH];
+    char filename[MAX_LINE_LENGTH];
+    size_t len;
     for (i = 1; i < argc; i++) {
-        char *filename = argv[i];
-        size_t len = strlen(filename);
+        
+        /* Copy the base filename */
+        strcpy(filename, argv[i]);
+        
+        /* Append the .as extension */
+        strcat(filename, ".as");
 
-        if (len < 3 || strcmp(filename + len - 3, ".as") != 0) {
-            fprintf(stderr, "Error: Invalid file type for '%s'. Expected a '.as' file.\n", filename);
-            continue;
-        }
+        len = strlen(filename);
 
         strncpy(outputFilename, filename, len - 3);
         outputFilename[len - 3] = '\0';
@@ -51,7 +54,7 @@ void processExpandedFile(const char *filename) {
     char *trimmedLine;
     LineInfo *head = NULL, *info, *current;
     LineType type;
-    int opcode;
+    int opcode, lineNumber = 1;
     FILE *file = fopen(filename, "r");
 
     if (!file) {
@@ -60,23 +63,24 @@ void processExpandedFile(const char *filename) {
     }
 
     while (fgets(line, sizeof(line), file)) {
+        trimmedLine = trimWhitespace(line);
+        /* Detect the line type and extract the label if present */
+        type = detectLineType(trimmedLine, label);
 
-    trimmedLine = trimWhitespace(line);
-    /* Detect the line type and extract the label if present */
-    type = detectLineType(trimmedLine, label);
-
-    if (type == LINE_DIRECTIVE || type == LINE_INSTRUCTION) {
-        /* Validate the line before processing it further */
-        if (!validateLine(trimmedLine, label, &type, &opcode)) {
-            fprintf(stderr, "Error: Invalid line detected in file '%s'. Skipping line.\n", filename);
-            continue;
+        if (type == LINE_DIRECTIVE || type == LINE_INSTRUCTION) {
+            /* Validate the line before processing it further */
+            if (!validateLine(trimmedLine, label, &type, &opcode, lineNumber)) {
+                fprintf(stderr, "Error: Invalid line detected in file '%s'. Skipping line.\n", filename);
+                lineNumber++;
+                continue;
+            }
+            /* Create a new LineInfo and add it to the list */
+            info = createLineInfo(trimmedLine, type, label);
+            addLineToList(&head, info);
+            printf("Line added to list: %s\n", trimmedLine);  /* Debugging output */
         }
-        /* Create a new LineInfo and add it to the list */
-        info = createLineInfo(trimmedLine, type, label);
-        addLineToList(&head, info);
-        printf("Line added to list: %s\n", trimmedLine);  /* Debugging output */
-    }
-    
+        lineNumber++;
+        /*CALL FOR THE FIRST STAGE*/
 }
 
 

@@ -1,6 +1,6 @@
 #include "line_recognizer.h"
 #include "line_info.h"
-#include "stages/utils/utils.h"
+#include "../utils/utils.h"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -12,7 +12,7 @@ const char *registers[] = {
     "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7"
 };
 
-int numRegisters = sizeof(registers) / sizeof(registers[0]);
+const int numRegisters = sizeof(registers) / sizeof(registers[0]);
 
 /* Checks if a given line is empty */
 bool isEmptyLine(const char *line) {

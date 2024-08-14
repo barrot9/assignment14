@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <ctype.h> /* Include ctype.h for isspace function */
 #include <stdlib.h> /* Include stdlib.h for exit */
+/* List to store defined macro names */
+#define MAX_MACROS 100
+#define MAX_MACRO_NAME_LENGTH 31
+
 
 /* List of invalid macro names */
 const char *invalidNames[] = {
@@ -12,6 +16,10 @@ const char *invalidNames[] = {
     ".data", ".string", ".entry", ".extern"
 };
 const int numInvalidNames = 20;
+
+
+static char macroNames[MAX_MACROS][MAX_MACRO_NAME_LENGTH + 1];
+static int macroCount = 0;
 
 /*
  * isValidMacroName: Checks if the macro name is valid.
@@ -27,6 +35,32 @@ int isValidMacroName(const char *name) {
         }
     }
     return 1;
+}
+
+/*
+ * isMacroName: Checks if the name is a macro.
+ */
+bool isMacroName(const char *name) {
+    int i;
+    for (i = 0; i < macroCount; i++) {
+        if (strcmp(macroNames[i], name) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/*
+ * addMacroName: Adds a macro name to the list of macro names.
+ */
+void addMacroName(const char *name) {
+    if (macroCount < MAX_MACROS) {
+        strncpy(macroNames[macroCount], name, MAX_MACRO_NAME_LENGTH);
+        macroNames[macroCount][MAX_MACRO_NAME_LENGTH] = '\0';
+        macroCount++;
+    } else {
+        fprintf(stderr, "Error: Maximum number of macros exceeded.\n");
+    }
 }
 
 /*
@@ -71,7 +105,7 @@ int validateMacros(const char *filename) {
                 fclose(file);
                 return 1; /* Error code */
             }
-
+            addMacroName(macroName);
             if (hasAdditionalCharacters(trimmedLine)) {
                 fprintf(stderr, "Error: Macro definition line has additional characters: '%s'\n", trimmedLine);
                 fclose(file);
