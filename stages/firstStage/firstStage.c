@@ -6,10 +6,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "stages/utils/struct.h" /* Symbol and program structure definitions */
-#include "stages/utils/logic.h"  /* Parsing logic and opcode definitions */
-#include "stages/utils/supp.h"   /* Supporting utilities */
-#include "stages/lineAnalyzer/line_info.h" /* LineInfo structure and related definitions */
+#include "../utils/struct.h" /* Symbol and program structure definitions */
+#include "../lineAnalyzer/line_info.h" /* LineInfo structure and related definitions */
+#include "../utils/utils.h"
 
 /*
  * The 'first' function processes an assembly file and updates the symbol table.
@@ -30,7 +29,7 @@ int first(struct SymbolTableManager* symbolManager, LineInfo* head) {
         /* Check for errors in the current line */
         if (current->type == LINE_UNKNOWN) {
             err = 1;
-            print_error("Error in line", line_c, "Unknown line type or unrecognized instruction");
+            printf("Error in line %d: Unknown line type or unrecognized instruction\n", line_c);
             line_c++;
             current = current->next;
             continue;
@@ -56,7 +55,7 @@ int first(struct SymbolTableManager* symbolManager, LineInfo* head) {
                     }
                 } else {
                     err = 1;
-                    print_error("Error in line", line_c, "Redefinition of symbol:'%s'", symbol_f->name);
+                    printf("Error in line %d: Redefinition of symbol: '%s'\n", line_c, symbol_f->name);
                 }
             } else {
                 /* Add new symbol based on line type */
@@ -110,11 +109,11 @@ int first(struct SymbolTableManager* symbolManager, LineInfo* head) {
                         symbol_f->sym_type = new_type_entry_data;
                     } else {
                         err = 1;
-                        print_error("Error in line", line_c, "Redefinition of symbol:'%s'", symbol_f->name);
+                        printf("Error in line %d: Redefinition of symbol: '%s'\n", line_c, symbol_f->name);
                     }
                 } else {
                     err = 1;
-                    print_error("Error in line", line_c, "Redefinition of symbol:'%s'", symbol_f->name);
+                    printf("Error in line %d: Redefinition of symbol: '%s'\n", line_c, symbol_f->name);
                 }
             } else {
                 if (current->isEntry) {
@@ -132,7 +131,7 @@ int first(struct SymbolTableManager* symbolManager, LineInfo* head) {
     for (i = 0; i < symbolManager->symbols_size; i++) {
         if (symbolManager->symbols[i].sym_type == new_type_entry_temporary) {
             err = 1; /* Flag error for temporary entries */
-            print_error("Error", 0, "Unresolved entry: '%s'", symbolManager->symbols[i].name);
+            printf("Error: Unresolved entry: '%s'\n", symbolManager->symbols[i].name);
         } else {
             if (symbolManager->symbols[i].sym_type == new_type_data || symbolManager->symbols[i].sym_type == new_type_entry_data) {
                 symbolManager->symbols[i].addr += ic; /* Adjust data symbol address */

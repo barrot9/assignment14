@@ -53,7 +53,7 @@ struct SymbolTableManager {
     int externals_size;          /* Number of external references */
 };
 
-struct SymbolTableManager symbolManager = {0};
+/*extern struct SymbolTableManager symbolManager;  */
 
 /* Searches for a symbol in the program's symbol table */
 struct symbol *sym_search_function(struct SymbolTableManager *symbolManager, char *name);

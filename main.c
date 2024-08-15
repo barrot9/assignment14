@@ -8,9 +8,16 @@
 #include <stdio.h>
 #include <stdlib.h> /* Include stdlib.h for exit */
 
+/* function declarations (will be moved later) */
+static struct SymbolTableManager symbolManager = {0}; 
+int first(struct SymbolTableManager* symbolManager, LineInfo* head); 
+int secondStage(struct SymbolTableManager* symbolManager, LineInfo* head);
+void printGeneratedCode(struct SymbolTableManager* symbolManager);
+
 /*
  * processFiles: Processes each file provided in the command-line arguments.
  */
+
 void processFiles(int argc, char *argv[]) {
     int i;
     char outputFilename[MAX_LINE_LENGTH];
@@ -57,6 +64,8 @@ void processExpandedFile(const char *filename) {
     LineType type;
     int opcode, lineNumber = 1;
     FILE *file = fopen(filename, "r");
+    int result;
+    int err;
 
     if (!file) {
         perror("Could not open expanded file");
@@ -83,7 +92,7 @@ void processExpandedFile(const char *filename) {
         lineNumber++;
 }
 
-    int result = first(&symbolManager, head); /* call for the first pass function */
+    result = first(&symbolManager, head); /* call for the first pass function */
     /* Check for errors */ 
     if (result) {
         printf("Errors occurred during the first pass.\n");
@@ -91,7 +100,7 @@ void processExpandedFile(const char *filename) {
         printf("First pass completed successfully.\n");
     }
 
-    int err = secondStage(&symbolManager, head); /* call for the second pass function */
+    err = secondStage(&symbolManager, head); /* call for the second pass function */
     /* Check for errors */
     if (err) {
         printf("Errors encountered during second stage processing.\n");

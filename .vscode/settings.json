@@ -3,6 +3,9 @@
         "macro_validation.h": "c",
         "utils.h": "c",
         "stdio.h": "c",
-        "line_info.h": "c"
+        "line_info.h": "c",
+        "struct.h": "c",
+        "logic.h": "c",
+        "supp.h": "c"
     }
 }

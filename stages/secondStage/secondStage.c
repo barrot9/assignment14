@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <string.h>
-#include "stages/utils/struct.h"            /* Symbol and program structure definitions */
-#include "stages/utils/logic.h"             /* Parsing logic and opcode definitions */
-#include "stages/utils/supp.h"              /* Supporting utilities */
-#include "stages/lineAnalyzer/line_info.h"  /* LineInfo structure and related definitions */
+#include <stdlib.h>
+#include "../utils/struct.h"            /* Symbol and program structure definitions */           
+#include "../lineAnalyzer/line_info.h"  /* LineInfo structure and related definitions */
 
 /*
  * Processes the second pass of an assembly file to complete code and data section generation.
@@ -63,7 +62,7 @@ int secondStage(struct SymbolTableManager* symbolManager, LineInfo* head) {
                             }
                         } else {
                             err = 1;
-                            print_error("Error in line", line_c, "undefined symbol:'%s'", current->operands[i]);
+                            printf("Error in line %d: undefined symbol: '%s'\n", line_c, current->operands[i]);
                         }
                         break;
 

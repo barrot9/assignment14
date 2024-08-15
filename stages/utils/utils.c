@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "struct.h"
 #include <ctype.h>
 #include <string.h>
 #include <stdbool.h>
@@ -62,4 +63,31 @@ const char *getCommand(int index) {
         return commands[index];
     }
     return NULL;
+}
+
+/* new implemented functions will add comments later */
+struct symbol * sym_search_function(struct SymbolTableManager * prog_ptrs,char * name) {
+    int i;
+    for(i=0;i<prog_ptrs->symbols_size;i++) {
+        if(strcmp(prog_ptrs->symbols[i].name,name) == 0) {
+            return &prog_ptrs->symbols[i];
+        }
+    }
+    return NULL;
+}
+void add_symbol(struct SymbolTableManager * prog_ptrs, char *name, 
+                        enum new_symbol_type  symbol_type,
+                        int address,int line_of_def,int c_number,int data_or_str_size) {
+    strcpy(prog_ptrs->symbols[prog_ptrs->symbols_size].name,name);prog_ptrs->symbols[prog_ptrs->symbols_size].sym_type = symbol_type;prog_ptrs->symbols[prog_ptrs->symbols_size].addr = address;
+    prog_ptrs->symbols[prog_ptrs->symbols_size].c_num = c_number;prog_ptrs->symbols[prog_ptrs->symbols_size].defined_in_line =line_of_def;prog_ptrs->symbols[prog_ptrs->symbols_size].data_size = data_or_str_size;
+    prog_ptrs->symbols_size++;
+}
+struct external * sym_search_function_external(struct SymbolTableManager * prog_ptrs,char * name) {
+int i;
+for(i=0; i < prog_ptrs->externals_size;i++) {
+    if(strcmp(name,prog_ptrs->externals[i].ext_name) == 0) {
+        return &prog_ptrs->externals[i];
+    }
+}
+return NULL;
 }
