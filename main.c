@@ -4,6 +4,7 @@
 #include "stages/utils/utils.h"
 #include "stages/lineAnalyzer/line_validator.h"
 #include "stages/utils/struct.h"
+#include "stages/finalStage/fileGenerator.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h> /* Include stdlib.h for exit */
