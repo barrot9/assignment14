@@ -1,11 +1,14 @@
 /*
-   This header defines the data structures and constants for managing symbols
-   and sections in the assembler. It includes structures for symbols, program data,
-   and external references, along with function prototypes for symbol management.
+   This header defines the data structures and constants for managing symbols,
+   sections, and external references in the assembler. It includes structures 
+   for symbols, program data, and external references, along with function 
+   prototypes for symbol management.
 */
 
 #ifndef STRUCT_H
 #define STRUCT_H
+
+#define SLOTS 4096                /* Maximum size for various arrays */
 
 /* Enumeration for symbol types in the assembly program */
 enum new_symbol_type {
@@ -26,8 +29,6 @@ struct symbol {
     int c_num;                   /* Custom code number */
     int data_size;               /* Size of data or string associated with symbol */
 };
-
-#define SLOTS 4096                /* Maximum size for various arrays */
 
 /* Represents an external reference in the assembly code */
 struct external {
@@ -53,17 +54,15 @@ struct SymbolTableManager {
     int externals_size;          /* Number of external references */
 };
 
-/*extern struct SymbolTableManager symbolManager;  */
+/* Function to search for a symbol in the program's symbol table */
+struct symbol *sym_search_function(struct SymbolTableManager *prog_ptrs, char *name);
 
-/* Searches for a symbol in the program's symbol table */
-struct symbol *sym_search_function(struct SymbolTableManager *symbolManager, char *name);
+/* Function to add a new symbol to the program's symbol table */
+void add_symbol(struct SymbolTableManager *prog_ptrs, char *name, 
+                enum new_symbol_type symbol_type, int address, int line_of_def,
+                int c_number, int data_or_str_size);
 
-/* Adds a symbol to the program's symbol table */
-void add_symbol(struct SymbolTableManager *symbolManager, char *name, 
-                enum new_symbol_type symbol_type,
-                int address, int line_of_def, int c_number, int data_or_str_size);
-
-/* Searches for an external reference in the program */
-struct external *sym_search_function_external(struct SymbolTableManager *symbolManager, char *name);
+/* Function to search for an external symbol by name */
+struct external *sym_search_function_external(struct SymbolTableManager *prog_ptrs, char *name);
 
 #endif /* STRUCT_H */

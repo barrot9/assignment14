@@ -10,7 +10,7 @@
 
 /* function declarations (will be moved later) */
 static struct SymbolTableManager symbolManager = {0}; 
-int first(struct SymbolTableManager* symbolManager, LineInfo* head); 
+int firstStage(struct SymbolTableManager* symbolManager, LineInfo* head); 
 int secondStage(struct SymbolTableManager* symbolManager, LineInfo* head);
 void printGeneratedCode(struct SymbolTableManager* symbolManager);
 
@@ -92,7 +92,7 @@ void processExpandedFile(const char *filename) {
         lineNumber++;
 }
 
-    result = first(&symbolManager, head); /* call for the first pass function */
+    result = firstStage(&symbolManager, head); /* call for the first pass function */
     /* Check for errors */ 
     if (result) {
         printf("Errors occurred during the first pass.\n");
@@ -105,7 +105,27 @@ void processExpandedFile(const char *filename) {
     if (err) {
         printf("Errors encountered during second stage processing.\n");
     } else {
-        printGeneratedCode(&symbolManager); /* Print the generated code (for testing only)*/ 
+        printf("Second pass completed successfully.\n");
+        
+        /* Generate the output files */
+        
+        /* Generate the .ob file (object file) */
+        createObjectFile(symbolManager.code, symbolManager.code_size, 
+                             symbolManager.data, symbolManager.data_size, 
+                             (char *)filename);
+
+        /* Generate the .ent file (entry symbols) */
+        if (symbolManager.entries_count > 0) {
+            createEntryFile(symbolManager.entries, symbolManager.entries_count, (char *)filename);
+        }
+
+        /* Generate the .ext file (external references) */
+        if (symbolManager.externals_size > 0) {
+            createExternalFile(symbolManager.externals, symbolManager.externals_size, (char *)filename);
+        }
+
+        /* Optionally print the generated code for debugging */
+        printGeneratedCode(&symbolManager);  
     }
 
 

@@ -15,7 +15,7 @@
  * It parses lines to determine whether they define data, code, or directives
  * and updates the instruction and data counters accordingly.
  */
-int first(struct SymbolTableManager* symbolManager, LineInfo* head) {
+int firstStage(struct SymbolTableManager* symbolManager, LineInfo* head) {
     int err = 0;               /* Error indicator */
     LineInfo* current = head;  /* Pointer to the current node in the linked list */
     struct symbol* symbol_f;   /* Pointer for symbol lookup */
