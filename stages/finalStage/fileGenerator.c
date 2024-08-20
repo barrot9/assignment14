@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "fileGenerator.h"
 
 /*
@@ -19,12 +20,21 @@ void createObjectFile(const int *instructions,
                       char *base_filename) {
 
     FILE *object_file;
-    char object_filename[256];
+    char *object_filename;
     int address_counter = 100;  /* Address starts from 100 */
     int i;
 
-    /* Create the object file name */
-    snprintf(object_filename, sizeof(object_filename), "%s.ob", base_filename);
+    /* Allocate memory for the object file name */
+    object_filename = (char *)malloc(strlen("output_files/") + strlen(base_filename) + 4); /* +4 for ".ob" and null terminator */
+    if (!object_filename) {
+        perror("Failed to allocate memory for object file name");
+        return;
+    }
+
+    /* Construct the object file name */
+    strcpy(object_filename, "output_files/");
+    strcat(object_filename, base_filename);
+    strcat(object_filename, ".ob");
 
     /* Open the object file */
     object_file = fopen(object_filename, "w");
@@ -58,6 +68,9 @@ void createObjectFile(const int *instructions,
         /* Close the object file */
         fclose(object_file);
     }
+
+    /* Free the allocated memory */
+    free(object_filename);
 }
 
 /*
@@ -67,11 +80,20 @@ void createEntryFile(const struct symbol * const entry_symbols[],
                      const int num_entries, 
                      char *base_filename) {
     FILE *entry_file;
-    char entry_filename[256];
+    char *entry_filename;
     int i;
 
+    /* Allocate memory for the entry file name */
+    entry_filename = (char *)malloc(strlen("output_files/") + strlen(base_filename) + 5); /* +5 for ".ent" and null terminator */
+    if (!entry_filename) {
+        perror("Failed to allocate memory for entry file name");
+        return;
+    }
+
     /* Construct the entry file name */
-    snprintf(entry_filename, sizeof(entry_filename), "%s.ent", base_filename);
+    strcpy(entry_filename, "output_files/");
+    strcat(entry_filename, base_filename);
+    strcat(entry_filename, ".ent");
 
     /* Open the entry file */
     entry_file = fopen(entry_filename, "w");
@@ -85,6 +107,9 @@ void createEntryFile(const struct symbol * const entry_symbols[],
         /* Close the entry file */
         fclose(entry_file);
     }
+
+    /* Free the allocated memory */
+    free(entry_filename);
 }
 
 /*
@@ -94,11 +119,20 @@ void createExternalFile(const struct external *externals,
                         const int num_externals, 
                         char *base_filename) {
     FILE *external_file;
-    char external_filename[256];
+    char *external_filename;
     int i, j;
 
+    /* Allocate memory for the external file name */
+    external_filename = (char *)malloc(strlen("output_files/") + strlen(base_filename) + 5); /* +5 for ".ext" and null terminator */
+    if (!external_filename) {
+        perror("Failed to allocate memory for external file name");
+        return;
+    }
+
     /* Construct the external file name */
-    snprintf(external_filename, sizeof(external_filename), "%s.ext", base_filename);
+    strcpy(external_filename, "output_files/");
+    strcat(external_filename, base_filename);
+    strcat(external_filename, ".ext");
 
     /* Open the external file */
     external_file = fopen(external_filename, "w");
@@ -114,4 +148,7 @@ void createExternalFile(const struct external *externals,
         /* Close the external file */
         fclose(external_file);
     }
+
+    /* Free the allocated memory */
+    free(external_filename);
 }
