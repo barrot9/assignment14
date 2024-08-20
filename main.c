@@ -9,12 +9,6 @@
 #include <stdio.h>
 #include <stdlib.h> /* Include stdlib.h for exit */
 
-/* function declarations (will be moved later) */
-static struct SymbolTableManager symbolManager = {0}; 
-int firstStage(struct SymbolTableManager* symbolManager, LineInfo* head); 
-int secondStage(struct SymbolTableManager* symbolManager, LineInfo* head);
-void printGeneratedCode(struct SymbolTableManager* symbolManager);
-
 /*
  * processFiles: Processes each file provided in the command-line arguments.
  */

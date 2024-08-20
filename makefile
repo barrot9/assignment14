@@ -27,7 +27,7 @@ firstStage.o: stages/firstStage/firstStage.c stages/utils/struct.h stages/lineAn
 secondStage.o: stages/secondStage/secondStage.c stages/utils/struct.h stages/lineAnalyzer/line_info.h stages/utils/utils.h
 	gcc -g -ansi -pedantic -Wall -c stages/secondStage/secondStage.c
 
-fileGenerator.o: stages/finalStage/fileGenerator.c stages/utils/struct.h 
+fileGenerator.o: stages/finalStage/fileGenerator.c stages/utils/struct.h stages/finalStage/fileGenerator.h
 	gcc -g -ansi -pedantic -Wall -c stages/finalStage/fileGenerator.c
 
 clean:

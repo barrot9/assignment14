@@ -13,6 +13,10 @@
 
 
 /* Function Prototypes */
+static struct SymbolTableManager symbolManager = {0}; 
+int firstStage(struct SymbolTableManager* symbolManager, LineInfo* head); 
+int secondStage(struct SymbolTableManager* symbolManager, LineInfo* head);
+void printGeneratedCode(struct SymbolTableManager* symbolManager);
 void processFiles(int argc, char *argv[]); /* Processes each file provided in the command-line arguments.*/
 void processExpandedFile(const char *filename); /*Processes the expanded file to recognize and handle each sentence type.*/
 

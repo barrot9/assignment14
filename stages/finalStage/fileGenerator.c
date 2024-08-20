@@ -1,152 +1,117 @@
 /*
-   This file implements functions to generate the output files (.ob, .ent, .ext) 
-   for the assembler. The object file (.ob) contains the machine code and data 
-   segments, the entry file (.ent) contains entry symbols and their addresses, 
-   and the external file (.ext) contains external symbols and their references.
-
-   The three functions in this file are:
-   1. createObjectFile: Generates the .ob file with machine code and data.
-   2. createEntryFile: Generates the .ent file listing all entry symbols.
-   3. createExternalFile: Generates the .ext file listing all external symbols and their references.
-*/
+   This module is responsible for generating the output files (.ob, .ent, .ext) 
+   created by the assembler. The object file (.ob) contains the machine code and 
+   data sections, the entry file (.ent) lists entry symbols and their addresses, 
+   and the external file (.ext) tracks external symbols and their references.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "../utils/struct.h"
+#include "fileGenerator.h"
 
 /*
-   Function to create the object file (.ob) containing machine code and data sections.
+   Generates the object file (.ob) containing machine code and data segments.
+ */
+void createObjectFile(const int *instructions,
+                      const int num_instructions,
+                      const int *data_section,
+                      const int num_data_items,
+                      char *base_filename) {
 
-   Parameters:
-   - code: Pointer to the array of machine code instructions.
-   - code_size: Number of instructions in the code array.
-   - data: Pointer to the array of data values.
-   - data_size: Number of data items in the data array.
-   - origin_name: The base name of the original file (without extension).
+    FILE *object_file;
+    char object_filename[256];
+    int address_counter = 100;  /* Address starts from 100 */
+    int i;
 
-   This function appends ".ob" to the origin_name, opens the file, and writes the 
-   code and data segments to it. Each line in the file includes an address (starting 
-   from 100) and the corresponding code or data value in chunks of 3 bits.
-*/
-void createObjectFile(const int *code,
-                      const int code_size,
-                      const int *data,
-                      const int data_size,
-                      char *origin_name) {
+    /* Create the object file name */
+    snprintf(object_filename, sizeof(object_filename), "%s.ob", base_filename);
+
+    /* Open the object file */
+    object_file = fopen(object_filename, "w");
     
-    int index_i;
-    FILE *obj_file;
-    char obj_file_name[256];  /* Adjust the size as needed */
-    int ic = 100;  /* Instruction counter starts at 100 */
+    if (object_file) {
+        /* Write header with sizes */
+        fprintf(object_file, "  %d %d\n", num_instructions, num_data_items);
 
-    /* Create the object file name by appending ".ob" to the original file name */
-    snprintf(obj_file_name, sizeof(obj_file_name), "%s.ob", origin_name);
-
-    /* Open the object file for writing */
-    obj_file = fopen(obj_file_name, "w");
-
-    /* Check if the file was successfully opened */
-    if (obj_file) {
-        /* Write the code and data sizes at the beginning of the file */
-        fprintf(obj_file, "  %d %d\n", code_size, data_size);
-
-        /* Write the code segment to the object file */
-        for (index_i = 0; index_i < code_size; index_i++, ic++) {
-            /* Print the address (instruction counter) */
-            fprintf(obj_file, "%04d ", ic);
-            /* Print the 15-bit code value in chunks of 3 bits each */
-            fprintf(obj_file, "%d%d%d%d%d\n",
-                    (code[index_i] >> 12) & 0x7,  /* Bits 14-12 */
-                    (code[index_i] >> 9)  & 0x7,  /* Bits 11-9 */
-                    (code[index_i] >> 6)  & 0x7,  /* Bits 8-6 */
-                    (code[index_i] >> 3)  & 0x7,  /* Bits 5-3 */
-                    (code[index_i]      ) & 0x7); /* Bits 2-0 */
+        /* Write the instruction segment */
+        for (i = 0; i < num_instructions; i++, address_counter++) {
+            fprintf(object_file, "%04d ", address_counter);
+            fprintf(object_file, "%d%d%d%d%d\n",
+                    (instructions[i] >> 12) & 0x7,
+                    (instructions[i] >> 9)  & 0x7,
+                    (instructions[i] >> 6)  & 0x7,
+                    (instructions[i] >> 3)  & 0x7,
+                    (instructions[i]      ) & 0x7);
         }
 
-        /* Write the data segment to the object file */
-        for (index_i = 0; index_i < data_size; index_i++, ic++) {
-            /* Print the address (instruction counter) */
-            fprintf(obj_file, "%04d ", ic);
-            /* Print the 15-bit data value in chunks of 3 bits each */
-            fprintf(obj_file, "%d%d%d%d%d\n",
-                    (data[index_i] >> 12) & 0x7,  /* Bits 14-12 */
-                    (data[index_i] >> 9)  & 0x7,  /* Bits 11-9 */
-                    (data[index_i] >> 6)  & 0x7,  /* Bits 8-6 */
-                    (data[index_i] >> 3)  & 0x7,  /* Bits 5-3 */
-                    (data[index_i]      ) & 0x7); /* Bits 2-0 */
+        /* Write the data segment */
+        for (i = 0; i < num_data_items; i++, address_counter++) {
+            fprintf(object_file, "%04d ", address_counter);
+            fprintf(object_file, "%d%d%d%d%d\n",
+                    (data_section[i] >> 12) & 0x7,
+                    (data_section[i] >> 9)  & 0x7,
+                    (data_section[i] >> 6)  & 0x7,
+                    (data_section[i] >> 3)  & 0x7,
+                    (data_section[i]      ) & 0x7);
         }
 
-        /* Close the object file after writing */
-        fclose(obj_file);
+        /* Close the object file */
+        fclose(object_file);
     }
 }
 
 /*
-   Function to create the entry symbols file (.ent) containing entry labels and their addresses.
+   Creates the entry symbols file (.ent), listing entry symbols and their addresses.
+ */
+void createEntryFile(const struct symbol * const entry_symbols[], 
+                     const int num_entries, 
+                     char *base_filename) {
+    FILE *entry_file;
+    char entry_filename[256];
+    int i;
 
-   Parameters:
-   - items: Array of pointers to symbols (entry symbols).
-   - size_items: Number of symbols in the items array.
-   - name_b: The base name of the original file (without extension).
+    /* Construct the entry file name */
+    snprintf(entry_filename, sizeof(entry_filename), "%s.ent", base_filename);
 
-   This function appends ".ent" to the name_b, opens the file, and writes each entry 
-   symbol's name and address to it. The symbols are listed one per line.
-*/
-void createEntryFile(const struct symbol * const items[], const int size_items, char *name_b) {
-    char file_ent_name[256];
-    FILE *file_ent;
-    int index_i;
+    /* Open the entry file */
+    entry_file = fopen(entry_filename, "w");
 
-    /* Create the entry file name by appending ".ent" to the original file name */
-    snprintf(file_ent_name, sizeof(file_ent_name), "%s.ent", name_b);
-
-    /* Open the entry file for writing */
-    file_ent = fopen(file_ent_name, "w");
-
-    /* Check if the file was successfully opened */
-    if (file_ent) {
-        /* Write each entry symbol and its address to the entry file */
-        for (index_i = 0; index_i < size_items; index_i++) {
-            fprintf(file_ent, "%s\t%04d\n", items[index_i]->name, items[index_i]->addr);
+    if (entry_file) {
+        /* Write each entry symbol and its address */
+        for (i = 0; i < num_entries; i++) {
+            fprintf(entry_file, "%s\t%04d\n", entry_symbols[i]->name, entry_symbols[i]->addr);
         }
-        /* Close the entry file after writing */
-        fclose(file_ent);
+
+        /* Close the entry file */
+        fclose(entry_file);
     }
 }
 
 /*
-   Function to create the external references file (.ext) containing external symbols and their references.
+   Generates the external references file (.ext), listing external symbols and their references.
+ */
+void createExternalFile(const struct external *externals, 
+                        const int num_externals, 
+                        char *base_filename) {
+    FILE *external_file;
+    char external_filename[256];
+    int i, j;
 
-   Parameters:
-   - params: Array of external symbols.
-   - size_params: Number of external symbols in the params array.
-   - name_b: The base name of the original file (without extension).
+    /* Construct the external file name */
+    snprintf(external_filename, sizeof(external_filename), "%s.ext", base_filename);
 
-   This function appends ".ext" to the name_b, opens the file, and writes each external 
-   symbol's name and its reference addresses to the file. Multiple references are listed 
-   for each symbol if applicable.
-*/
-void createExternalFile(const struct external *params, const int size_params, char *name_b) {
-    char file_ext_name[256];
-    FILE *file_ext;
-    int index_i;
-    int index_j;
+    /* Open the external file */
+    external_file = fopen(external_filename, "w");
 
-    /* Create the external file name by appending ".ext" to the original file name */
-    snprintf(file_ext_name, sizeof(file_ext_name), "%s.ext", name_b);
-
-    /* Open the external file for writing */
-    file_ext = fopen(file_ext_name, "w");
-
-    /* Check if the file was successfully opened */
-    if (file_ext) {
-        /* Write each external symbol and its references to the external file */
-        for (index_i = 0; index_i < size_params; index_i++) {
-            for (index_j = 0; index_j < params[index_i].addr_c; index_j++) {
-                fprintf(file_ext, "%s\t%d\n", params[index_i].ext_name, params[index_i].addr[index_j]);
+    if (external_file) {
+        /* Write each external symbol and its references */
+        for (i = 0; i < num_externals; i++) {
+            for (j = 0; j < externals[i].addr_c; j++) {
+                fprintf(external_file, "%s\t%d\n", externals[i].ext_name, externals[i].addr[j]);
             }
         }
-        /* Close the external file after writing */
-        fclose(file_ext);
+
+        /* Close the external file */
+        fclose(external_file);
     }
 }
