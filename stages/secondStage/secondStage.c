@@ -1,21 +1,17 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "../utils/struct.h"            /* Symbol and program structure definitions */           
-#include "../lineAnalyzer/line_info.h"  /* LineInfo structure and related definitions */
+#include "../utils/struct.h"                    
+#include "../lineAnalyzer/line_info.h"  
 
-/*
- * Processes the second pass of an assembly file to complete code and data section generation.
- * This function analyzes each line of the assembly code, updates code and data sections, 
- * resolves symbols, and handles external references.
- */
+/* Processes the second pass of the assembly file to complete code and data section generation. */
 int secondStage(struct SymbolTableManager* symbolManager, LineInfo* head) {
-    int err = 0; /* Error flag initialized to 0 */
-    LineInfo* current = head; /* Pointer to the current node in the linked list */
-    struct symbol* symbol_f; /* Pointer to a symbol structure for symbol table lookup */
-    struct external* ext_f;  /* Pointer to an external structure for external references */
-    int line_c = 1;          /* Line counter initialized to 1 */
-    int i;                   /* General-purpose loop variable */
+    int err = 0;                
+    LineInfo* current = head;   
+    struct symbol* symbol_f;    
+    struct external* ext_f;     
+    int line_c = 1;             
+    int i;                      
 
     /* Iterate through the linked list of parsed lines */
     while (current != NULL) {

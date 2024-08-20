@@ -1,49 +1,46 @@
 /*
-   This module implements the 'first' function to process an assembly source file.
-   It parses each line to build and manage the symbol table, handling labels,
-   entry points, and external symbols, and ensures proper addressing and error detection.
+   This file implements the first pass (firstStage) of an assembler.
+   It processes each line of the assembly code, identifies and manages symbols, 
+   updates instruction and data counters.
 */
 
 #include <stdio.h>
 #include <string.h>
-#include "../utils/struct.h" /* Symbol and program structure definitions */
-#include "../lineAnalyzer/line_info.h" /* LineInfo structure and related definitions */
+#include "../utils/struct.h" 
+#include "../lineAnalyzer/line_info.h" 
 #include "../utils/utils.h"
 
-/*
- * The 'first' function processes an assembly file and updates the symbol table.
- * It parses lines to determine whether they define data, code, or directives
- * and updates the instruction and data counters accordingly.
- */
 int firstStage(struct SymbolTableManager* symbolManager, LineInfo* head) {
-    int err = 0;               /* Error indicator */
-    LineInfo* current = head;  /* Pointer to the current node in the linked list */
+    int err = 0;               /* Error flag initialized to 0 */
+    LineInfo* current = head;  /* Start with the head of the linked list */
     struct symbol* symbol_f;   /* Pointer for symbol lookup */
-    int line_c = 1;            /* Line count starts from 1 */
+    int line_c = 1;            /* Line counter starts from 1 */
     int ic = 100;              /* Instruction counter starts from 100 */
     int dc = 0;                /* Data counter starts from 0 */
     int i;                     /* General-purpose loop variable */
 
-    /* Iterate through the linked list of parsed lines */
+    /* Iterate through each line in the linked list */
     while (current != NULL) {
-        /* Check for errors in the current line */
+       
+        /* Handle unknown line types */
         if (current->type == LINE_UNKNOWN) {
             err = 1;
             printf("Error in line %d: Unknown line type or unrecognized instruction\n", line_c);
             line_c++;
             current = current->next;
-            continue;
+            continue;  /* Move to the next line */
         }
 
-        /* Handle lines with labels that are either directives or code */
+        /* Handle lines with labels that are either directives or instructions */
         if (strlen(current->label) > 0 &&
             (current->type == LINE_DIRECTIVE || current->type == LINE_INSTRUCTION)) {
             
-            symbol_f = sym_search_function(symbolManager, current->label); /* Search for the symbol */
+            /* Search for the symbol in the symbol table */
+            symbol_f = sym_search_function(symbolManager, current->label); 
 
-            if (symbol_f) { /* If symbol is found */
+            if (symbol_f) { /* If the symbol already exists */
                 if (symbol_f->sym_type == new_type_entry_temporary) {
-                    /* Update symbol information based on line type */
+                    /* Update symbol information based on the line type */
                     if (current->type == LINE_INSTRUCTION) {
                         symbol_f->addr = ic;
                         symbol_f->defined_in_line = line_c;
@@ -58,7 +55,7 @@ int firstStage(struct SymbolTableManager* symbolManager, LineInfo* head) {
                     printf("Error in line %d: Redefinition of symbol: '%s'\n", line_c, symbol_f->name);
                 }
             } else {
-                /* Add new symbol based on line type */
+                /* Add a new symbol based on the line type */
                 if (current->type == LINE_INSTRUCTION) {
                     add_symbol(symbolManager, current->label, new_type_code, ic, line_c, 0, 0);
                 } else {
@@ -76,7 +73,7 @@ int firstStage(struct SymbolTableManager* symbolManager, LineInfo* head) {
         /* Update instruction counter for instruction lines */
         if (current->type == LINE_INSTRUCTION) {
             ic++;
-            /* Check and handle operand types */
+            /* Increase counter for each operand based on its addressing method */
             for (i = 0; i < current->operandCount; i++) {
                 switch (current->addressingMethods[i]) {
                     case ADDRESSING_IMMEDIATE:
@@ -90,7 +87,7 @@ int firstStage(struct SymbolTableManager* symbolManager, LineInfo* head) {
                 }
             }
         }
-        /* Update data counter for .data and .string directives */
+        /* Update data counter for data directives */
         else if (current->type == LINE_DIRECTIVE) {
             if (strncmp(current->line, ".data", 5) == 0) {
                 dc += current->operandCount;
@@ -123,19 +120,21 @@ int firstStage(struct SymbolTableManager* symbolManager, LineInfo* head) {
                 }
             }
         }
-        line_c++; /* Increment line count */
-        current = current->next; /* Move to the next node in the linked list */
+        line_c++; 
+        current = current->next; 
     }
 
-    /* Final adjustments to symbol addresses and handling entries */
+    /* Final adjustments to symbol addresses and handling of unresolved entries */
     for (i = 0; i < symbolManager->symbols_size; i++) {
         if (symbolManager->symbols[i].sym_type == new_type_entry_temporary) {
-            err = 1; /* Flag error for temporary entries */
+            err = 1; 
             printf("Error: Unresolved entry: '%s'\n", symbolManager->symbols[i].name);
         } else {
+            /* Adjust addresses for data symbols */
             if (symbolManager->symbols[i].sym_type == new_type_data || symbolManager->symbols[i].sym_type == new_type_entry_data) {
-                symbolManager->symbols[i].addr += ic; /* Adjust data symbol address */
+                symbolManager->symbols[i].addr += ic; 
             }
+            /* Track entry symbols for later use */
             if (symbolManager->symbols[i].sym_type == new_type_entry_code || symbolManager->symbols[i].sym_type == new_type_entry_data) {
                 symbolManager->entries[symbolManager->entries_count] = &symbolManager->symbols[i];
                 symbolManager->entries_count++;

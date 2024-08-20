@@ -8,50 +8,50 @@
 #ifndef STRUCT_H
 #define STRUCT_H
 
-#define SLOTS 4096                /* Maximum size for various arrays */
+#define SLOTS 4096               
 
 /* Enumeration for symbol types in the assembly program */
 enum new_symbol_type {
-    new_type_code,               /* Symbol in the code section */
-    new_type_data,               /* Symbol in the data section */
-    new_type_entry_temporary,    /* Temporary entry symbol */
-    new_type_entry_data,         /* Data entry symbol */
-    new_type_entry_code,         /* Code entry symbol */
-    new_type_external            /* External symbol */
+    new_type_code,              
+    new_type_data,               
+    new_type_entry_temporary,    
+    new_type_entry_data,         
+    new_type_entry_code,         
+    new_type_external            
 };
 
 /* Represents a symbol in the symbol table */
 struct symbol {
-    char name[32];               /* Symbol name */
-    enum new_symbol_type sym_type; /* Symbol type */
-    int addr;                    /* Symbol address */
-    int defined_in_line;         /* Line where symbol is defined */
-    int c_num;                   /* Custom code number */
-    int data_size;               /* Size of data or string associated with symbol */
+    char name[32];               
+    enum new_symbol_type sym_type; 
+    int addr;                    
+    int defined_in_line;         
+    int c_num;                   
+    int data_size;              
 };
 
 /* Represents an external reference in the assembly code */
 struct external {
-    char *ext_name;              /* Name of the external symbol */
-    int addr[SLOTS];             /* Addresses where the external is referenced */
-    int addr_c;                  /* Count of address references */
+    char *ext_name;              
+    int addr[SLOTS];             
+    int addr_c;                  
 };
 
 /* Structure to manage code, data, symbols, and externals */
 struct SymbolTableManager {
-    int code[SLOTS];             /* Code section */
-    int code_size;               /* Size of the code section */
-    int data[SLOTS];             /* Data section */
-    int data_size;               /* Size of the data section */
+    int code[SLOTS];             
+    int code_size;               
+    int data[SLOTS];             
+    int data_size;               
 
-    struct symbol symbols[SLOTS]; /* Symbol table */
-    int symbols_size;            /* Number of symbols in the table */
+    struct symbol symbols[SLOTS]; 
+    int symbols_size;            
 
-    const struct symbol *entries[SLOTS]; /* Entry symbols array */
-    int entries_count;           /* Number of entry symbols */
+    const struct symbol *entries[SLOTS]; 
+    int entries_count;           
 
-    struct external externals[SLOTS]; /* External references array */
-    int externals_size;          /* Number of external references */
+    struct external externals[SLOTS]; 
+    int externals_size;         
 };
 
 /* Function to search for a symbol in the program's symbol table */
@@ -65,4 +65,4 @@ void add_symbol(struct SymbolTableManager *prog_ptrs, char *name,
 /* Function to search for an external symbol by name */
 struct external *sym_search_function_external(struct SymbolTableManager *prog_ptrs, char *name);
 
-#endif /* STRUCT_H */
+#endif 

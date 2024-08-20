@@ -1,7 +1,7 @@
 /*
-   This module is responsible for generating the output files (.ob, .ent, .ext) 
-   created by the assembler. The object file (.ob) contains the machine code and 
-   data sections, the entry file (.ent) lists entry symbols and their addresses, 
+   This file is responsible for generating the output files (.ob, .ent, .ext). 
+   The object file (.ob) contains the machine code and data sections, 
+   the entry file (.ent) lists entry symbols and their addresses, 
    and the external file (.ext) tracks external symbols and their references.
  */
 
@@ -11,8 +11,8 @@
 #include "fileGenerator.h"
 
 /*
-   Generates the object file (.ob) containing machine code and data segments.
- */
+    Generates the object file (.ob) containing machine code and data segments.
+*/
 void createObjectFile(const int *instructions,
                       const int num_instructions,
                       const int *data_section,
@@ -25,7 +25,7 @@ void createObjectFile(const int *instructions,
     int i;
 
     /* Allocate memory for the object file name */
-    object_filename = (char *)malloc(strlen("output_files/") + strlen(base_filename) + 4); /* +4 for ".ob" and null terminator */
+    object_filename = (char *)malloc(strlen("output_files/") + strlen(base_filename) + 4); 
     if (!object_filename) {
         perror("Failed to allocate memory for object file name");
         return;
@@ -75,7 +75,7 @@ void createObjectFile(const int *instructions,
 
 /*
    Creates the entry symbols file (.ent), listing entry symbols and their addresses.
- */
+*/
 void createEntryFile(const struct symbol * const entry_symbols[], 
                      const int num_entries, 
                      char *base_filename) {
@@ -84,7 +84,7 @@ void createEntryFile(const struct symbol * const entry_symbols[],
     int i;
 
     /* Allocate memory for the entry file name */
-    entry_filename = (char *)malloc(strlen("output_files/") + strlen(base_filename) + 5); /* +5 for ".ent" and null terminator */
+    entry_filename = (char *)malloc(strlen("output_files/") + strlen(base_filename) + 5); 
     if (!entry_filename) {
         perror("Failed to allocate memory for entry file name");
         return;
@@ -114,7 +114,7 @@ void createEntryFile(const struct symbol * const entry_symbols[],
 
 /*
    Generates the external references file (.ext), listing external symbols and their references.
- */
+*/
 void createExternalFile(const struct external *externals, 
                         const int num_externals, 
                         char *base_filename) {
@@ -123,7 +123,7 @@ void createExternalFile(const struct external *externals,
     int i, j;
 
     /* Allocate memory for the external file name */
-    external_filename = (char *)malloc(strlen("output_files/") + strlen(base_filename) + 5); /* +5 for ".ext" and null terminator */
+    external_filename = (char *)malloc(strlen("output_files/") + strlen(base_filename) + 5); 
     if (!external_filename) {
         perror("Failed to allocate memory for external file name");
         return;

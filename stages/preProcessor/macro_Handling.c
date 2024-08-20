@@ -14,12 +14,9 @@ void addLine(Line **lines, const char *content);
 void freeLines(Line *lines);
 
 /*
- * processFile: Reads the input file line by line, detects macro definitions,
- * stores them, and calls expandMacros to process and expand macros in the file content,
- * writing the result to a new file.
- * 
- * Parameters:
- * - filename: The name of the file to be processed.
+   Reads the input file line by line, detects macro definitions,
+   stores them, and calls expandMacros to process and expand macros in the file content,
+   writing the result to a new file.
  */
 void processFile(const char *filename) {
     char line[MAX_LINE_LENGTH + 2], outputFileName[MAX_LINE_LENGTH]; /* +2 to handle \n and \0 */
@@ -75,14 +72,7 @@ void processFile(const char *filename) {
     }
 }
 
-/*
- * addMacro: Adds a macro definition to the linked list of macros.
- * 
- * Parameters:
- * - macroName: The name of the macro to be added.
- * - lines: The linked list of lines that make up the macro.
- * - macros: A pointer to the linked list of macros.
- */
+/* Adds a macro definition to the linked list of macros. */
 void addMacro(const char *macroName, Line *lines, Macro **macros) {
     Macro *newMacro = (Macro *)malloc(sizeof(Macro));
 
@@ -96,13 +86,7 @@ void addMacro(const char *macroName, Line *lines, Macro **macros) {
     *macros = newMacro;
 }
 
-/*
- * addLine: Adds a line to the linked list of lines.
- * 
- * Parameters:
- * - lines: A pointer to the linked list of lines.
- * - content: The content of the line to be added.
- */
+/* Adds a line to the linked list of lines. */
 void addLine(Line **lines, const char *content) {
     Line *newLine = (Line *)malloc(sizeof(Line));
     Line *temp;
@@ -125,12 +109,7 @@ void addLine(Line **lines, const char *content) {
     }
 }
 
-/*
- * freeLines: Frees the linked list of lines.
- * 
- * Parameters:
- * - lines: The linked list of lines to be freed.
- */
+/* Frees the linked list of lines. */
 void freeLines(Line *lines) {
     while (lines != NULL) {
         Line *next = lines->next;
@@ -139,15 +118,7 @@ void freeLines(Line *lines) {
     }
 }
 
-/*
- * expandMacros: Expands the macros found in the file content and writes the expanded content
- * to the output file.
- * 
- * Parameters:
- * - inputFile: The file to read the content from.
- * - macros: The linked list of macros to be expanded.
- * - outputFile: The file to write the expanded content to.
- */
+/* Expands the macros found in the file content and writes the expanded content to the output file. */
 void expandMacros(FILE *inputFile, Macro *macros, FILE *outputFile) {
     char line[MAX_LINE_LENGTH + 2]; /* +2 to handle \n and \0 */
     int isMacro;
@@ -190,17 +161,7 @@ void expandMacros(FILE *inputFile, Macro *macros, FILE *outputFile) {
     }
 }
 
-/*
- * readLine: Reads a line from the file, ensuring it handles the newline character properly.
- * 
- * Parameters:
- * - file: The file to read the line from.
- * - buffer: The buffer to store the read line.
- * - maxLength: The maximum length of the line to be read.
- * 
- * Returns:
- * - 1 if a line was successfully read, 0 otherwise.
- */
+/* Reads a line from the file, ensuring it handles the newline character properly. */
 int readLine(FILE *file, char *buffer, int maxLength) {
     size_t length;
     if (fgets(buffer, maxLength, file) == NULL) {

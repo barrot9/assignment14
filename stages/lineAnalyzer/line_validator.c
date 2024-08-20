@@ -1,3 +1,11 @@
+/*
+   This module is responsible for validating the lines of the assembly code. 
+   It includes functions to check the correctness of labels, commands, 
+   operands, and directives in the assembly source file.
+   This module plays the role in detecting 
+   and reporting errors during the first pass of the assembler.
+*/
+
 #include "line_validator.h"
 #include "line_recognizer.h"
 #include "../utils/utils.h"

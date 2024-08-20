@@ -1,3 +1,9 @@
+/*
+   This module is responsible for recognizing and processing lines in the assembly code.
+   It includes functions to detect line types. This module is a "pre stage" for the first pass of the
+   assembler where the symbols and instructions are identified and categorized.
+*/
+
 #include "line_recognizer.h"
 #include "line_info.h"
 #include "../utils/utils.h"

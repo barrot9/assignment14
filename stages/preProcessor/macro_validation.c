@@ -12,15 +12,7 @@
 static char macroNames[MAX_MACROS][MAX_MACRO_NAME_LENGTH + 1]; /* Array to store defined macro names */
 static int macroCount = 0; /* Counter for the number of macros */
 
-/*
- * isValidMacroName: Checks if the macro name is valid.
- * 
- * Parameters:
- * - name: The name of the macro to be validated.
- * 
- * Returns:
- * - 1 if the name is valid, 0 otherwise.
- */
+/* Checks if the macro name is valid. */
 int isValidMacroName(const char *name) {
     int i;
     if (name[0] == '.') {
@@ -34,15 +26,7 @@ int isValidMacroName(const char *name) {
     return 1;
 }
 
-/*
- * isMacroName: Checks if the name is a macro.
- * 
- * Parameters:
- * - name: The name to check against the list of defined macros.
- * 
- * Returns:
- * - true if the name is a macro, false otherwise.
- */
+/* isMacroName: Checks if the name is a macro. */
 bool isMacroName(const char *name) {
     int i;
     for (i = 0; i < macroCount; i++) {
@@ -54,12 +38,7 @@ bool isMacroName(const char *name) {
 }
 
 
-/*
- * addMacroName: Adds a macro name to the list of macro names.
- * 
- * Parameters:
- * - name: The name of the macro to be added.
- */
+/* Adds a macro name to the list of macro names. */
 void addMacroName(const char *name) {
     if (macroCount < MAX_MACROS) {
         strncpy(macroNames[macroCount], name, MAX_MACRO_NAME_LENGTH);
@@ -70,15 +49,7 @@ void addMacroName(const char *name) {
     }
 }
 
-/*
- * hasAdditionalCharacters: Checks if a line has additional characters beyond expected.
- * 
- * Parameters:
- * - line: The line to be checked for additional characters.
- * 
- * Returns:
- * - 0 if the line is valid, 1 if there are additional characters.
- */
+/* hasAdditionalCharacters: Checks if a line has additional characters beyond expected. */
 int hasAdditionalCharacters(const char *line) {
     const char *trimmedLine = trimWhitespace((char *)line);
     if (strncmp(trimmedLine, "macr ", 5) == 0) {
@@ -96,15 +67,7 @@ int hasAdditionalCharacters(const char *line) {
 }
 
 
-/*
- * validateMacros: Validates macro names and ensures no additional characters.
- * 
- * Parameters:
- * - filename: The name of the file containing macros to be validated.
- * 
- * Returns:
- * - 0 on success, 1 on failure.
- */
+/* Validates macro names and ensures no additional characters. */
 int validateMacros(const char *filename) {
     char line[MAX_LINE_LENGTH + 2]; /* +2 to handle \n and \0 */
     FILE *file = fopen(filename, "r");
