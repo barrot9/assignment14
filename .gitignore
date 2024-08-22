@@ -1,11 +1,8 @@
 test_Macro.txt
 test_Macro.asm
-ps.as
-ps.am
-invalid_Macro1.as
-invalid_Macro2.as
-main.o
-macro_Handling.o
 .vscode/settings.json
 *.o
 *.exe
+*.as
+*.am
+output_files

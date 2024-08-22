@@ -65,22 +65,37 @@ const char *getCommand(int index) {
     return NULL;
 }
 
-/* new implemented functions will add comments later */
-struct symbol * sym_search_function(struct SymbolTableManager * prog_ptrs,char * name) {
+
+struct symbol * sym_search_function(struct SymbolTableManager * prog_ptrs, char * name) {
     int i;
-    for(i=0;i<prog_ptrs->symbols_size;i++) {
-        if(strcmp(prog_ptrs->symbols[i].name,name) == 0) {
+    for (i = 0; i < prog_ptrs->symbols_size; i++) {
+        if (strcmp(prog_ptrs->symbols[i].name, name) == 0) {
+            /* Debug: Symbol found in table */
+            printf("Debug: Symbol '%s' found in table.\n", name);
             return &prog_ptrs->symbols[i];
         }
     }
+    /* Debug: Symbol not found in table */
+    printf("Debug: Symbol '%s' not found in table.\n", name);
     return NULL;
 }
-
 
 /* Function to add a new symbol to the symbol table */
 void add_symbol(struct SymbolTableManager * prog_ptrs, char *name, 
                         enum new_symbol_type symbol_type,
                         int address, int line_of_def, int c_number, int data_or_str_size) {
+    
+    /* Check if the symbol already exists */
+    struct symbol *existingSymbol = sym_search_function(prog_ptrs, name);
+    if (existingSymbol) {
+        /* Warning: Attempt to redefine existing symbol */
+        printf("Warning: Attempt to redefine existing symbol '%s'.\n", name);
+        return;
+    }
+
+    /* Debug: Adding new symbol */
+    printf("Debug: Adding new symbol '%s' of type %d at address %d.\n", name, symbol_type, address);
+    
     /* Copy the symbol name into the symbol table at the current symbols_size index */
     strcpy(prog_ptrs->symbols[prog_ptrs->symbols_size].name, name);
     
@@ -109,13 +124,14 @@ struct external * sym_search_function_external(struct SymbolTableManager * prog_
     
     /* Iterate over the externals array to search for the external reference by name */
     for (i = 0; i < prog_ptrs->externals_size; i++) {
-        /* Compare the given name with the current external's name */
         if (strcmp(name, prog_ptrs->externals[i].ext_name) == 0) {
-            /* If a match is found, return a pointer to the external */
+            /* Debug: External symbol found in table */
+            printf("Debug: External symbol '%s' found in table.\n", name);
             return &prog_ptrs->externals[i];
         }
     }
     
-    /* If no match is found, return NULL */
+    /* Debug: External symbol not found in table */
+    printf("Debug: External symbol '%s' not found in table.\n", name);
     return NULL;
 }
