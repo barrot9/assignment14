@@ -1,34 +1,36 @@
-all: final_project
+# Build command
+all: assembler
 
-final_project: main.o macro_Handling.o macro_validation.o line_recognizer.o utils.o line_validator.o firstStage.o secondStage.o fileGenerator.o
-	gcc -g -ansi -pedantic -Wall main.o macro_Handling.o macro_validation.o line_recognizer.o utils.o line_validator.o firstStage.o secondStage.o fileGenerator.o -o final_project
+# Program link
+assembler: main.o firstStage.o secondStage.o line_interpreter.o fileGenerator.o utils.o pre_processor.o 
+	gcc -ansi -g  -Wall -pedantic  main.o pre_processor.o firstStage.o secondStage.o line_interpreter.o fileGenerator.o utils.o -o assembler
 
-main.o: main.c main.h stages/preProcessor/macro_Handling.h stages/preProcessor/macro_validation.h stages/lineAnalyzer/line_recognizer.h stages/utils/utils.h stages/lineAnalyzer/line_validator.h
-	gcc -g -ansi -pedantic -Wall -c main.c
+# Main rule
+main.o: main.c main.h
+	gcc -ansi -g  -pedantic -Wall -c  main.c -o main.o
 
-macro_Handling.o: stages/preProcessor/macro_Handling.c stages/preProcessor/macro_Handling.h stages/utils/utils.h
-	gcc -g -ansi -pedantic -Wall -c stages/preProcessor/macro_Handling.c
+# Utility rules
+pre_processor.o: pre_processor/pre_processor.c pre_processor/pre_processor.h
+	gcc -ansi -g  -pedantic  -Wall -c  pre_processor/pre_processor.c -o pre_processor.o
 
-macro_validation.o: stages/preProcessor/macro_validation.c stages/preProcessor/macro_validation.h stages/preProcessor/macro_Handling.h stages/utils/utils.h
-	gcc -g -ansi -pedantic -Wall -c stages/preProcessor/macro_validation.c
+firstStage.o: first_stage/firstStage.c first_stage/firstStage.h 
+	gcc -ansi -g  -pedantic -Wall -c  first_stage/firstStage.c -o firstStage.o
 
-line_recognizer.o: stages/lineAnalyzer/line_recognizer.c stages/lineAnalyzer/line_recognizer.h stages/utils/utils.h
-	gcc -g -ansi -pedantic -Wall -c stages/lineAnalyzer/line_recognizer.c
+secondStage.o: second_stage/secondStage.c second_stage/secondStage.h 
+	gcc -ansi -g  -pedantic -Wall -c  second_stage/secondStage.c -o secondStage.o
 
-line_validator.o: stages/lineAnalyzer/line_validator.c stages/lineAnalyzer/line_validator.h stages/lineAnalyzer/line_recognizer.h stages/utils/utils.h
-	gcc -g -ansi -pedantic -Wall -c stages/lineAnalyzer/line_validator.c
+line_interpreter.o: line_interpreter.c line_interpreter.h
+	gcc -ansi -g  -pedantic -Wall -c  line_interpreter.c -o line_interpreter.o
 
-utils.o: stages/utils/utils.c stages/utils/utils.h
-	gcc -g -std=c99 -pedantic -Wall -c stages/utils/utils.c
+fileGenerator.o: fileGenerator.c  fileGenerator.h
+	gcc -ansi -g  -pedantic -Wall -c  fileGenerator.c -o fileGenerator.o
 
-firstStage.o: stages/firstStage/firstStage.c stages/utils/struct.h stages/lineAnalyzer/line_info.h stages/utils/utils.h
-	gcc -g -ansi -pedantic -Wall -c stages/firstStage/firstStage.c
+utils.o: utils.c utils.h
+	gcc -ansi -g  -pedantic -Wall -c  utils.c -o utils.o
 
-secondStage.o: stages/secondStage/secondStage.c stages/utils/struct.h stages/lineAnalyzer/line_info.h stages/utils/utils.h
-	gcc -g -ansi -pedantic -Wall -c stages/secondStage/secondStage.c
-
-fileGenerator.o: stages/finalStage/fileGenerator.c stages/utils/struct.h stages/finalStage/fileGenerator.h
-	gcc -g -ansi -pedantic -Wall -c stages/finalStage/fileGenerator.c
-
+# Extra commands
 clean:
-	rm -f final_project main.o macro_Handling.o macro_validation.o line_recognizer.o utils.o line_validator.o file_generator.o
+	rm -f *.o assembler 
+
+test:
+	./assembler input_files/good1 input_files/good2 input_files/good3 input_files/faulty1 input_files/faulty2 
