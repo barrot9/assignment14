@@ -5,9 +5,14 @@ all: assembler
 assembler: main.o firstStage.o secondStage.o line_interpreter.o fileGenerator.o utils.o pre_processor.o 
 	gcc -ansi -g  -Wall -pedantic  main.o pre_processor.o firstStage.o secondStage.o line_interpreter.o fileGenerator.o utils.o -o assembler
 
+<<<<<<< HEAD
 # Main rule
 main.o: main.c main.h
 	gcc -ansi -g  -pedantic -Wall -c  main.c -o main.o
+=======
+main.o: main.c main.h stages/preProcessor/macro_Handling.h stages/preProcessor/macro_validation.h stages/lineAnalyzer/line_recognizer.h stages/utils/utils.h stages/utils/struct.h stages/lineAnalyzer/line_validator.h 
+	gcc -g -ansi -pedantic -Wall -c main.c
+>>>>>>> 389b960335faa1dd26beee952d443d9d0b53411c
 
 # Utility rules
 pre_processor.o: pre_processor/pre_processor.c pre_processor/pre_processor.h
